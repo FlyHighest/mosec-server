@@ -1,5 +1,6 @@
 .ipynb_checkpoints/
 models-cache/
+models-cache
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
