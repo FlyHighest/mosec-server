@@ -1,23 +1,21 @@
 import sys 
 sys.path.append(".")
-import boto3
-from params.secret import r2_access_key_id,r2_access_key_secret,r2_account_id,r2_public_url
+from qiniu import Auth, put_file, etag
+from params.secret import qiniu_access_key_id,qiniu_access_key_secret,qiniu_public_url
 import nanoid 
 import traceback
 
 class StorageTool:
     def __init__(self) -> None:
-        self.s3 = boto3.resource('s3',
-            endpoint_url = f'https://{r2_account_id}.r2.cloudflarestorage.com',
-            aws_access_key_id = r2_access_key_id,
-            aws_secret_access_key = r2_access_key_secret
-        )
+        self.q = Auth(qiniu_access_key_id,qiniu_access_key_secret)
 
     def upload(self,img_path):
         object_name = nanoid.generate(size=12)+".jpg"
         try:
-            self.s3.Object("imagedraw",object_name).upload_file(img_path)
-            return r2_public_url+object_name
+            token = self.q.upload_token("imagedraw",object_name)
+            ret, _ = put_file(token,object_name,img_path,version="v2")
+            assert ret['hash'] == etag(img_path)
+            return qiniu_public_url+object_name
         except:
             traceback.print_exc()
             print("Error while uploading")
@@ -25,5 +23,5 @@ class StorageTool:
 
 if __name__=="__main__":
     storage_tools = StorageTool()
-    storage_tools.upload("/Users/dxm/Downloads/nahida.jpg")
+    storage_tools.upload("/Users/zhangtianyu/rabit-newyear.jpg")
         
