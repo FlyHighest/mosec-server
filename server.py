@@ -3,15 +3,10 @@ from io import BytesIO
 from typing import List
 from urllib.request import urlretrieve
 
-import numpy as np  # type: ignore
 import torch  # type: ignore
-import torchvision  # type: ignore
-from PIL import Image  # type: ignore
-from torchvision import transforms  # type: ignore
 
 from mosec import Server, Worker
 from mosec.errors import ValidationError
-from mosec.mixin import MsgpackMixin
 
 from models.stable_diffusion_model import StableDiffusionModel
 from storage.storage_tool import StorageTool
@@ -28,7 +23,7 @@ logger.addHandler(sh)
 INFERENCE_BATCH_SIZE = 1
 
 
-class Preprocess(MsgpackMixin, Worker):
+class Preprocess(Worker):
     """Sample Preprocess worker"""
 
     def __init__(self) -> None:
@@ -52,7 +47,7 @@ class Inference(Worker):
 
     def __init__(self):
         super().__init__()
-        worker_id = self.worker_id() - 1
+        worker_id = self.worker_id - 1
         self.device = (
             torch.device(f"cuda:{worker_id}") if torch.cuda.is_available() else torch.device("cpu")
         )
@@ -67,7 +62,7 @@ class Inference(Worker):
         return img_path 
 
 
-class Postprocess(MsgpackMixin, Worker):
+class Postprocess(Worker):
     """Sample Postprocess worker"""
 
     def __init__(self):
@@ -85,6 +80,6 @@ class Postprocess(MsgpackMixin, Worker):
 if __name__ == "__main__":
     server = Server()
     server.append_worker(Preprocess, num=4)
-    server.append_worker(Inference, num=2, max_batch_size=INFERENCE_BATCH_SIZE)
+    server.append_worker(Inference, num=1, max_batch_size=INFERENCE_BATCH_SIZE)
     server.append_worker(Postprocess, num=1)
     server.run()
