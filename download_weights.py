@@ -5,7 +5,6 @@ from diffusers.pipelines.stable_diffusion.safety_checker import (
     StableDiffusionSafetyChecker,
 )
 from params.constants import MODEL_CACHE
-from storage.storage_service import StorageTool
 
 SD_2_1 = "stabilityai/stable-diffusion-2-1"
 
