@@ -100,17 +100,12 @@ class Postprocess(Worker):
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) == 1:
-        print("Start mosec server with 1 inference worker by default")
-        num_gpu = 1
-    else:
-        num_gpu = int(sys.argv[1])
-        print(f"Start mosec server with {num_gpu} inference worker(s)")
-
+    from gpuinfo import GPUInfo
+    num_gpus = len(GPUInfo.gpu_usage()[0])
+    
     server = Server()
     server.append_worker(Preprocess, num=4)
-    server.append_worker(Inference, num=num_gpu,
+    server.append_worker(Inference, num=num_gpus,
                          max_batch_size=INFERENCE_BATCH_SIZE)
     server.append_worker(Postprocess, num=4)
     server.run()
