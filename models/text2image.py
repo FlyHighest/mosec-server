@@ -1,7 +1,8 @@
 from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 from params.constants import MODEL_CACHE, SD_2_1
 import torch 
-class StableDiffusionModel:
+
+class Text2ImageModel:
     def __init__(self, device) -> None:
         self.sd_2_1 = StableDiffusionPipeline.from_pretrained(
             SD_2_1,

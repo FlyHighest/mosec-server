@@ -1,2 +1,10 @@
 MODEL_CACHE = "models-cache"
-SD_2_1 = "stabilityai/stable-diffusion-2-1"
+
+# Models from huggingface
+MODELS = {
+    "AltDiffusion":"AltDiffusion",
+    "stable-diffusion-2.1": "stable-diffusion-2-1",
+    "openjourney": "openjourney-fp16",
+    "Taiyi-Chinese-v0.1": "Taiyi-Stable-Diffusion-1B-Chinese-v0.1",
+}
+

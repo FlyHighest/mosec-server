@@ -32,6 +32,9 @@ class Preprocess(Worker):
     def forward(self, data: dict):
         try:
             prompt = data["prompt"]
+            negative_prompot = data["negative_prompt"]
+            model_type = data["model_type"]
+            
         except KeyError as err:
             raise ValidationError(f"cannot find key {err}") from err
         except Exception as err:
