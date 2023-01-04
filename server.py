@@ -8,7 +8,7 @@ import torch  # type: ignore
 from mosec import Server, Worker
 from mosec.errors import ValidationError
 
-from models.stable_diffusion_model import StableDiffusionModel
+from models.text2image import Text2ImageModel
 from storage.storage_tool import StorageTool
 
 logger = logging.getLogger()
@@ -25,24 +25,43 @@ INFERENCE_BATCH_SIZE = 1
 
 class Preprocess(Worker):
     """Sample Preprocess worker"""
+    '''
+    Data structure of each type
+    Type1: text2image
+        - model_name
+        - scheduler_name
+        - prompt
+        - negative_prompt
+        - height
+        - width
+        - num_inference_steps
+        - guidance_scale
+    
+    Type2: image2image
+
+    Type3: upscale
+    
+    '''
 
     def __init__(self) -> None:
         super().__init__()
 
     def forward(self, data: dict):
         try:
-            prompt = data["prompt"]
-            negative_prompot = data["negative_prompt"]
-            model_type = data["model_type"]
-            
+            match data['type']:
+                case "text2image":
+                    model_name = data['model_name']
+                    scheduler_name = data['scheduler_name']
+                    del data['model_name']
+                    del data['scheduler_name']
+
         except KeyError as err:
             raise ValidationError(f"cannot find key {err}") from err
         except Exception as err:
-            raise ValidationError(f"cannot decode as image data: {err}") from err
+            raise ValidationError(
+                f"cannot decode as image data: {err}") from err
 
-        return {
-            "prompt": prompt
-        }
+        return model_name, scheduler_name, data
 
 
 class Inference(Worker):
@@ -52,17 +71,18 @@ class Inference(Worker):
         super().__init__()
         worker_id = self.worker_id - 1
         self.device = (
-            torch.device(f"cuda:{worker_id}") if torch.cuda.is_available() else torch.device("cpu")
+            torch.device(f"cuda:{worker_id}") if torch.cuda.is_available(
+            ) else torch.device("cpu")
         )
         logger.info("using computing device: %s", self.device)
-        self.model = StableDiffusionModel(self.device)
+        self.text2image = Text2ImageModel(self.device)
 
-    def forward(self, data:dict):
-        logger.info("processing batch with size: %d", len(data))
-        prompt = data["prompt"]
-        # TODO: and other params
-        img_path = self.model(prompt=prompt,model_name="")
-        return img_path 
+    def forward(self, model_name, scheduler_name, pipeline_params: dict):
+
+        img_path = self.text2image(model_name=model_name,
+                                    scheduler_name=scheduler_name,
+                                    pipeline_params=pipeline_params)
+        return img_path
 
 
 class Postprocess(Worker):
@@ -71,18 +91,26 @@ class Postprocess(Worker):
     def __init__(self):
         super().__init__()
         self.storage_tool = StorageTool()
-        
+
     def forward(self, img_path):
         img_url = self.storage_tool.upload(img_path)
         return {
             "img_url": img_url,
         }
 
-        
 
 if __name__ == "__main__":
+    import sys
+    if len(sys.argv) == 1:
+        print("Start mosec server with 1 inference worker by default")
+        num_gpu = 1
+    else:
+        num_gpu = int(sys.argv[1])
+        print(f"Start mosec server with {num_gpu} inference worker(s)")
+
     server = Server()
     server.append_worker(Preprocess, num=4)
-    server.append_worker(Inference, num=1, max_batch_size=INFERENCE_BATCH_SIZE)
-    server.append_worker(Postprocess, num=1)
+    server.append_worker(Inference, num=num_gpu,
+                         max_batch_size=INFERENCE_BATCH_SIZE)
+    server.append_worker(Postprocess, num=4)
     server.run()

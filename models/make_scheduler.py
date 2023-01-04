@@ -6,45 +6,32 @@ from diffusers import (
     EulerAncestralDiscreteScheduler,
     DPMSolverMultistepScheduler
 )
-from params.constants import MODEL_CACHE
+from params.constants import MODELS
 
 
-def make_scheduler(name, model_name, revision):
-    return {
-        "PNDM": PNDMScheduler.from_config(
-            model_name,
-            local_files_only=True, 
-            subfolder="scheduler",
-            revision=revision or "main"
+def make_scheduler(name, model_name):
+    match name:
+        case "PNDM": return PNDMScheduler.from_config(
+            MODELS[model_name],
+            subfolder="scheduler"
+            ),
+        case "K_LMS": return LMSDiscreteScheduler.from_config(
+            MODELS[model_name],
+            subfolder="scheduler"
         ),
-        "K_LMS": LMSDiscreteScheduler.from_config(
-            model_name,
-            local_files_only=True,
-            subfolder="scheduler",
-            revision=revision or "main"
+        case "DDIM": return DDIMScheduler.from_config(
+            MODELS[model_name],
+            subfolder="scheduler"
         ),
-        "DDIM": DDIMScheduler.from_config(
-            model_name,
-            local_files_only=True,
-            subfolder="scheduler",
-            revision=revision or "main"
+        case "K_EULER": return EulerDiscreteScheduler.from_config(
+            MODELS[model_name],
+            subfolder="scheduler"
         ),
-        "K_EULER": EulerDiscreteScheduler.from_config(
-            model_name,
-            local_files_only=True, 
-            subfolder="scheduler",
-            revision=revision or "main"
+        case "K_EULER_ANCESTRAL": return EulerAncestralDiscreteScheduler.from_config(
+            MODELS[model_name],
+            subfolder="scheduler"
         ),
-        "K_EULER_ANCESTRAL": EulerAncestralDiscreteScheduler.from_config(
-            model_name,
-            local_files_only=True,
-            subfolder="scheduler",
-            revision=revision or "main"
-        ),
-        "DPM": DPMSolverMultistepScheduler.from_config(
-            model_name,
-            local_files_only=True,
-            subfolder="scheduler",
-            revision=revision or "main"
+        case "DPM": return DPMSolverMultistepScheduler.from_config(
+            MODELS[model_name],
+            subfolder="scheduler"
         )
-    }[name]
