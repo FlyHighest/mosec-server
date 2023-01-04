@@ -75,7 +75,7 @@ class Inference(Worker):
             ) else torch.device("cpu")
         )
         logger.info("using computing device: %s", self.device)
-        self.text2image = Text2ImageModel(self.device)
+        self.text2image = Text2ImageModel(self.device, worker_id)
 
     def forward(self, model_name, scheduler_name, pipeline_params: dict):
 
@@ -93,10 +93,20 @@ class Postprocess(Worker):
         self.storage_tool = StorageTool()
 
     def forward(self, img_path):
-        img_url = self.storage_tool.upload(img_path)
-        return {
-            "img_url": img_url,
-        }
+        if img_path == "Error":
+            return {
+                "img_url": self.storage_tool.nsfw_warning_picture,
+            }
+        elif img_path == "NSFW":
+            return {
+                "img_url": self.storage_tool.server_error_picture,
+            }
+        else: 
+            img_url = self.storage_tool.upload(img_path)
+            return {
+                "img_url": img_url,
+            }
+        
 
 
 if __name__ == "__main__":
