@@ -2,7 +2,7 @@ from diffusers import DiffusionPipeline, DPMSolverMultistepScheduler
 from params.constants import MODELS
 import torch
 from models.make_scheduler import make_scheduler
-
+import traceback
 
 class Text2ImageModel:
     def __init__(self, device, worker_id) -> None:
@@ -33,5 +33,6 @@ class Text2ImageModel:
             image.save(self.output_name, format='jpeg', quality=90)
             return self.output_name
         except:
+            traceback.print_exc()
             print("Error while generating")
             return "Error"
