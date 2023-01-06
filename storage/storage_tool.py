@@ -3,14 +3,14 @@ sys.path.append(".")
 from qiniu import Auth, put_file, etag
 from params.secret import qiniu_access_key_id,qiniu_access_key_secret,qiniu_public_url
 import nanoid 
-import traceback
+import traceback,time
 
 class StorageTool:
     def __init__(self) -> None:
         self.q = Auth(qiniu_access_key_id,qiniu_access_key_secret)
 
     def upload(self,img_path):
-        object_name = nanoid.generate(size=12)+".jpg"
+        object_name = time.strftime("%Y-%m-%d")+"/"+nanoid.generate(size=12)+".jpg"
         try:
             token = self.q.upload_token("imagedraw",object_name)
             ret, _ = put_file(token,object_name,img_path,version="v2")
