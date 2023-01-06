@@ -23,11 +23,11 @@ def make_scheduler(name, model_name):
             MODELS[model_name],
             subfolder="scheduler"
         ),
-        case "K_EULER": return EulerDiscreteScheduler.from_config(
+        case "EULER": return EulerDiscreteScheduler.from_config(
             MODELS[model_name],
             subfolder="scheduler"
         ),
-        case "K_EULER_ANCESTRAL": return EulerAncestralDiscreteScheduler.from_config(
+        case "EULER_A": return EulerAncestralDiscreteScheduler.from_config(
             MODELS[model_name],
             subfolder="scheduler"
         ),
