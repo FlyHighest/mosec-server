@@ -54,6 +54,7 @@ class Preprocess(Worker):
                     scheduler_name = data['scheduler_name']
                     del data['model_name']
                     del data['scheduler_name']
+                    del data['type']
 
         except KeyError as err:
             raise ValidationError(f"cannot find key {err}") from err
@@ -61,7 +62,11 @@ class Preprocess(Worker):
             raise ValidationError(
                 f"cannot decode as image data: {err}") from err
 
-        return model_name, scheduler_name, data
+        return {
+            "model_name":model_name, 
+            "scheduler_name":scheduler_name,
+            "pipeline_params": data
+        }
 
 
 class Inference(Worker):
@@ -75,13 +80,11 @@ class Inference(Worker):
             ) else torch.device("cpu")
         )
         logger.info("using computing device: %s", self.device)
-        self.text2image = Text2ImageModel(self.device)
+        self.text2image = Text2ImageModel(self.device, worker_id)
 
-    def forward(self, model_name, scheduler_name, pipeline_params: dict):
+    def forward(self, preprocess_data: dict):
 
-        img_path = self.text2image(model_name=model_name,
-                                    scheduler_name=scheduler_name,
-                                    pipeline_params=pipeline_params)
+        img_path = self.text2image(**preprocess_data)
         return img_path
 
 
@@ -93,10 +96,20 @@ class Postprocess(Worker):
         self.storage_tool = StorageTool()
 
     def forward(self, img_path):
-        img_url = self.storage_tool.upload(img_path)
-        return {
-            "img_url": img_url,
-        }
+        if img_path == "Error":
+            return {
+                "img_url": self.storage_tool.nsfw_warning_picture,
+            }
+        elif img_path == "NSFW":
+            return {
+                "img_url": self.storage_tool.server_error_picture,
+            }
+        else: 
+            img_url = self.storage_tool.upload(img_path)
+            return {
+                "img_url": img_url,
+            }
+        
 
 
 if __name__ == "__main__":

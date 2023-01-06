@@ -8,6 +8,8 @@ import traceback,time
 class StorageTool:
     def __init__(self) -> None:
         self.q = Auth(qiniu_access_key_id,qiniu_access_key_secret)
+        self.nsfw_warning_picture = qiniu_public_url+"rabit-newyear.jpg"
+        self.server_error_picture = qiniu_public_url+"rabit-newyear.jpg"
 
     def upload(self,img_path):
         object_name = time.strftime("%Y-%m-%d")+"/"+nanoid.generate(size=12)+".jpg"
