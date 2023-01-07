@@ -36,7 +36,7 @@ class Text2ImageModel:
             if nsfw_detect:
                 return "NSFW"
 
-            image.save(self.output_name, format='webp', quality=70)
+            image.save(self.output_name, format='webp', quality=80)
             return self.output_name
         except:
             traceback.print_exc()
