@@ -53,6 +53,9 @@ class Preprocess(Worker):
                     model_name = data['model_name']
                     scheduler_name = data['scheduler_name']
                     seed = int(data['seed'])
+                    data['prompt'] = data['prompt'].replace("，",",")
+                    data['negative_prompt'] = data['negative_prompt'].replace("，",",")
+
                     del data['seed']
                     del data['model_name']
                     del data['scheduler_name']

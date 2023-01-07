@@ -17,7 +17,7 @@ class Text2ImageModel:
             pipeline.safety_checker = self.AltDiffusion.safety_checker
         self.worker_id = worker_id
         self.device = device
-        self.output_name = f"/tmp/output_id{self.worker_id}.jpg"
+        self.output_name = f"/tmp/output_id{self.worker_id}.webp"
 
     def __call__(self, model_name, scheduler_name,seed, pipeline_params: dict):
         try:
@@ -28,14 +28,14 @@ class Text2ImageModel:
             if seed is None or seed==-1:
                 output = pipeline(**pipeline_params)
             else:
-                output = pipeline(generator=torch.Generator(device=self.device).manual_seed(seed)
+                output = pipeline(generator=torch.Generator(device=self.device).manual_seed(seed),**pipeline_params)
                                   
             image = output.images[0]
             nsfw_detect = output.nsfw_content_detected[0]
             if nsfw_detect:
                 return "NSFW"
 
-            image.save(self.output_name, format='jpeg', quality=90)
+            image.save(self.output_name, format='webp', quality=70)
             return self.output_name
         except:
             traceback.print_exc()
