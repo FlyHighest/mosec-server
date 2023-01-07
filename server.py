@@ -52,6 +52,8 @@ class Preprocess(Worker):
                 case "text2image":
                     model_name = data['model_name']
                     scheduler_name = data['scheduler_name']
+                    seed = int(data['seed'])
+                    del data['seed']
                     del data['model_name']
                     del data['scheduler_name']
                     del data['type']
@@ -60,11 +62,12 @@ class Preprocess(Worker):
             raise ValidationError(f"cannot find key {err}") from err
         except Exception as err:
             raise ValidationError(
-                f"cannot decode as image data: {err}") from err
+                f"error: {err}") from err
 
         return {
             "model_name":model_name, 
             "scheduler_name":scheduler_name,
+            "seed": seed,
             "pipeline_params": data
         }
 
@@ -98,11 +101,11 @@ class Postprocess(Worker):
     def forward(self, img_path):
         if img_path == "Error":
             return {
-                "img_url": self.storage_tool.nsfw_warning_picture,
+                "img_url": "Error",
             }
         elif img_path == "NSFW":
             return {
-                "img_url": self.storage_tool.server_error_picture,
+                "img_url": "NSFW",
             }
         else: 
             img_url = self.storage_tool.upload(img_path)
