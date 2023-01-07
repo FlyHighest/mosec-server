@@ -7,7 +7,7 @@ import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
 
-from models.text2image import Text2ImageModel
+from models import Text2ImageModel,UpscaleModel
 from storage.storage_tool import StorageTool
 
 logger = logging.getLogger()
@@ -83,7 +83,7 @@ class Preprocess(Worker):
             raise ValidationError(
                 f"error: {err}") from err
 
-        return 
+        return ret
 
 
 class Inference(Worker):
@@ -102,7 +102,7 @@ class Inference(Worker):
 
         # prepare models
         self.text2image_model = Text2ImageModel(self.device, worker_id)
-        self.upscale_model 
+        self.upscale_model = UpscaleModel(self.device, worker_id)
 
     def forward(self, preprocess_data: dict):
         match preprocess_data["type"]:
