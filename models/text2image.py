@@ -1,7 +1,7 @@
 from diffusers import DiffusionPipeline
 from params.constants import MODELS
 import torch
-from models.make_scheduler import make_scheduler
+from .scheduler import make_scheduler
 import traceback
 
 class Text2ImageModel:
