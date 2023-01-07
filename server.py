@@ -1,10 +1,9 @@
 import logging
 from io import BytesIO
-from typing import List
-from urllib.request import urlretrieve
+from PIL import Image
 
 import torch  # type: ignore
-
+import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
 
@@ -61,18 +60,30 @@ class Preprocess(Worker):
                     del data['scheduler_name']
                     del data['type']
 
+                    ret = {
+                                "type": "text2image",
+                                "model_name":model_name, 
+                                "scheduler_name":scheduler_name,
+                                "seed": seed,
+                                "pipeline_params": data
+                            }
+
+                case "upscale":
+                    img_bytes = httpx.get(data['img_url']).content
+                    img = Image.open(BytesIO(img_bytes)).convert("RGB")
+                    ret = {
+                        "type": "upscale",
+                        "img": img
+                    }
+
+
         except KeyError as err:
             raise ValidationError(f"cannot find key {err}") from err
         except Exception as err:
             raise ValidationError(
                 f"error: {err}") from err
 
-        return {
-            "model_name":model_name, 
-            "scheduler_name":scheduler_name,
-            "seed": seed,
-            "pipeline_params": data
-        }
+        return 
 
 
 class Inference(Worker):
@@ -80,17 +91,27 @@ class Inference(Worker):
 
     def __init__(self):
         super().__init__()
+        # initialization
+        torch.backends.cudnn.benchmark = True
         worker_id = self.worker_id - 1
         self.device = (
             torch.device(f"cuda:{worker_id}") if torch.cuda.is_available(
             ) else torch.device("cpu")
         )
         logger.info("using computing device: %s", self.device)
-        self.text2image = Text2ImageModel(self.device, worker_id)
+
+        # prepare models
+        self.text2image_model = Text2ImageModel(self.device, worker_id)
+        self.upscale_model 
 
     def forward(self, preprocess_data: dict):
-
-        img_path = self.text2image(**preprocess_data)
+        match preprocess_data["type"]:
+            case "text2image":
+                del preprocess_data["type"]
+                img_path = self.text2image_model(**preprocess_data)
+            case "upscale":
+                del preprocess_data["type"]
+                img_path = self.upscale_model(**preprocess_data)
         return img_path
 
 
