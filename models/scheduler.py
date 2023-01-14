@@ -4,7 +4,9 @@ from diffusers import (
     DDIMScheduler,
     EulerDiscreteScheduler,
     EulerAncestralDiscreteScheduler,
-    DPMSolverMultistepScheduler
+    DPMSolverMultistepScheduler,
+    HeunDiscreteScheduler,
+    KDPM2AncestralDiscreteScheduler
 )
 from params.constants import MODELS
 
@@ -15,7 +17,7 @@ def make_scheduler(name, model_name):
             MODELS[model_name],
             subfolder="scheduler"
             )
-        case "K_LMS": return LMSDiscreteScheduler.from_config(
+        case "LMS": return LMSDiscreteScheduler.from_config(
             MODELS[model_name],
             subfolder="scheduler"
         )

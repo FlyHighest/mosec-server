@@ -5,12 +5,14 @@ from params.secret import qiniu_access_key_id,qiniu_access_key_secret,qiniu_publ
 import nanoid 
 import traceback,time
 
+IMAGE_ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+
 class StorageTool:
     def __init__(self) -> None:
         self.q = Auth(qiniu_access_key_id,qiniu_access_key_secret)
   
     def upload(self,img_path):
-        object_name = time.strftime("%Y-%m-%d")+"/"+nanoid.generate(size=12)+".webp"
+        object_name = time.strftime("%Y-%m-%d")+"/"+nanoid.generate(IMAGE_ID_ALPHABET, size=25)+".webp"
         try:
             token = self.q.upload_token("imagedraw",object_name)
             ret, _ = put_file(token,object_name,img_path,version="v2")

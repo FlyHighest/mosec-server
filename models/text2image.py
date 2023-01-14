@@ -26,10 +26,7 @@ class Text2ImageModel:
 
             pipeline.scheduler = make_scheduler(scheduler_name,model_name)
             with torch.inference_mode():
-                if seed is None or seed==-1:
-                    output = pipeline(**pipeline_params)
-                else:
-                    output = pipeline(generator=torch.Generator(device=self.device).manual_seed(seed),**pipeline_params)
+                output = pipeline(generator=torch.Generator(device=self.device).manual_seed(seed),**pipeline_params)
                                     
             image = output.images[0]
             nsfw_detect = output.nsfw_content_detected[0]
