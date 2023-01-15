@@ -1,5 +1,5 @@
 from diffusers import DiffusionPipeline
-from params.constants import MODELS
+from params.constants import MODELS,MODEL_CACHE
 import torch
 from .scheduler import make_scheduler
 import traceback
@@ -11,10 +11,11 @@ class Text2ImageModel:
             self.__setattr__(model_name,
                              DiffusionPipeline.from_pretrained(
                                  MODELS[model_name],
-                                 torch_dtype=torch.float16
+                                 torch_dtype=torch.float16,
+                                 cache_dir=MODEL_CACHE
                              ).to(device))
             pipeline: DiffusionPipeline = self.__getattribute__(model_name)
-            pipeline.safety_checker = self.AltDiffusion.safety_checker
+            # pipeline.safety_checker = self.AltDiffusion.safety_checker
             pipeline.enable_xformers_memory_efficient_attention()
         self.worker_id = worker_id
         self.device = device

@@ -2,9 +2,10 @@ MODEL_CACHE = "models-cache"
 
 # Models from huggingface
 MODELS = {
-  #  "AltDiffusion": MODEL_CACHE+"/AltDiffusion",
-    "Stable-Diffusion-2.1": MODEL_CACHE+"/stable-diffusion-2-1",
-    "OpenJourney": MODEL_CACHE + "/openjourney-fp16",
-  #  "Anything-v3": MODEL_CACHE + "/anything-v3.0-fp16",
-    "Taiyi-Chinese-v0.1": MODEL_CACHE+"/Taiyi-Stable-Diffusion-1B-Chinese-v0.1-fp16",
+    "Taiyi-Chinese-v0.1": "IDEA-CCNL/Taiyi-Stable-Diffusion-1B-Chinese-v0.1",
+    "Taiyi-Chinese-Anime-v0.1": "IDEA-CCNL/Taiyi-Stable-Diffusion-1B-Anime-Chinese-v0.1",
+    "Chinese-style-sd-2-v0.1":"Midu/chinese-style-stable-diffusion-2-v0.1",
+    "Stable-Diffusion-2.1": "stabilityai/stable-diffusion-2-1",
+    "OpenJourney": "prompthero/openjourney",
+    "Anything-v3-better-vae":  "Linaqruf/anything-v3-better-vae"
 }
