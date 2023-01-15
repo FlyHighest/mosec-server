@@ -7,9 +7,10 @@ from transformers import AutoTokenizer
 from typing import Dict
 class Text2ImageModel:
     def __init__(self, device, worker_id) -> None:
+        self.models:Dict[str,DiffusionPipeline] = dict()
+
         for model_name in MODELS.keys():
-            print("Load model ",model_name)
-            self.models:Dict[str,DiffusionPipeline] = dict()
+            print("Load model",model_name)
             if model_name == "Chinese-style-sd-2-v0.1":
                 tokenizer = AutoTokenizer.from_pretrained(
                     "lyua1225/clip-huge-zh-75k-steps-bs4096",torch_dtype=torch.float16,
