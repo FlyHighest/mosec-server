@@ -10,12 +10,23 @@ class Text2ImageModel:
         for model_name in MODELS.keys():
             print("Load model ",model_name)
             self.models:Dict[str,DiffusionPipeline] = dict()
-
-            self.models[model_name]= DiffusionPipeline.from_pretrained(
-                                 MODELS[model_name],
-                                 torch_dtype=torch.float16,
-                                 cache_dir=MODEL_CACHE
-                             ).to(device)
+            if model_name == "Chinese-style-sd-2-v0.1":
+                tokenizer = AutoTokenizer.from_pretrained(
+                    "lyua1225/clip-huge-zh-75k-steps-bs4096",torch_dtype=torch.float16,
+                    cache_dir=MODEL_CACHE, trust_remote_code=True)
+                
+                self.models[model_name]= DiffusionPipeline.from_pretrained(
+                                    MODELS[model_name],
+                                    torch_dtype=torch.float16,
+                                    cache_dir=MODEL_CACHE,
+                                    tokenizer=tokenizer
+                                ).to(device)
+            else:
+                self.models[model_name]= DiffusionPipeline.from_pretrained(
+                                    MODELS[model_name],
+                                    torch_dtype=torch.float16,
+                                    cache_dir=MODEL_CACHE,
+                                ).to(device)
             self.models[model_name].enable_xformers_memory_efficient_attention()
             self.models[model_name].feature_extractor = self.models["Taiyi-Chinese-v0.1"].feature_extractor
             self.models[model_name].safety_checker =  self.models["Taiyi-Chinese-v0.1"].safety_checker
