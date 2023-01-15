@@ -13,7 +13,7 @@ for model_name in MODELS.keys():
                              ).to("cuda")
        
     if model_name == "Chinese-style-sd-2-v0.1":
-        models[model_name].tokenizer = AutoTokenizer.from_pretrained("lyua1225/clip-huge-zh-75k-steps-bs4096",cache_dir=MODEL_CACHE, trust_remote_code=True)
+        models[model_name].tokenizer = AutoTokenizer.from_pretrained("lyua1225/clip-huge-zh-75k-steps-bs4096",torch_dtype=torch.float16,cache_dir=MODEL_CACHE, trust_remote_code=True)
     print(model_name +" OK")
 
 exit(0)
