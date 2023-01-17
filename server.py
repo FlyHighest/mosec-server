@@ -6,7 +6,7 @@ import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
-
+from params.constants import MODELS,MODELS_FP16
 from models import Text2ImageModel,UpscaleModel
 from storage.storage_tool import StorageTool
 
@@ -101,7 +101,7 @@ class Inference(Worker):
         logger.info("using computing device: %s", self.device)
 
         # prepare models
-        self.text2image_model = Text2ImageModel(self.device, worker_id)
+        self.text2image_model = Text2ImageModel(self.device, worker_id, MODELS_FP16)
         self.upscale_model = UpscaleModel(self.device, worker_id)
 
     def forward(self, preprocess_data: dict):

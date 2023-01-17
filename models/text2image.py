@@ -5,11 +5,12 @@ from .scheduler import make_scheduler
 import traceback
 from transformers import AutoTokenizer
 from typing import Dict
+
 class Text2ImageModel:
-    def __init__(self, device, worker_id) -> None:
+    def __init__(self, device, worker_id, model_dict) -> None:
         self.models:Dict[str,DiffusionPipeline] = dict()
 
-        for model_name in MODELS.keys():
+        for model_name in model_dict.keys():
             print("Load model",model_name)
             if model_name == "Chinese-style-sd-2-v0.1":
                 tokenizer = AutoTokenizer.from_pretrained(
@@ -18,6 +19,7 @@ class Text2ImageModel:
                 
                 self.models[model_name]= DiffusionPipeline.from_pretrained(
                                     MODELS[model_name],
+                                    custom_pipeline="lpw_stable_diffusion",
                                     torch_dtype=torch.float16,
                                     cache_dir=MODEL_CACHE,
                                     tokenizer=tokenizer
@@ -25,6 +27,7 @@ class Text2ImageModel:
             else:
                 self.models[model_name]= DiffusionPipeline.from_pretrained(
                                     MODELS[model_name],
+                                    custom_pipeline="lpw_stable_diffusion",
                                     torch_dtype=torch.float16,
                                     cache_dir=MODEL_CACHE,
                                 ).to(device)
@@ -42,11 +45,11 @@ class Text2ImageModel:
 
     def __call__(self, model_name, scheduler_name,seed, pipeline_params: dict):
         try:
-            pipeline = self.models[model_name]
+            pipeline  = self.models[model_name]
 
             pipeline.scheduler = make_scheduler(scheduler_name,model_name)
             with torch.inference_mode():
-                output = pipeline(generator=torch.Generator(device=self.device).manual_seed(seed),**pipeline_params)
+                output = pipeline.text2img(generator=torch.Generator(device=self.device).manual_seed(seed),**pipeline_params)
                                     
             image = output.images[0]
             nsfw_detect = output.nsfw_content_detected[0]
