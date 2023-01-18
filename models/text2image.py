@@ -15,9 +15,7 @@ class Text2ImageModel:
             self.models[model_name]= DiffusionPipeline.from_pretrained(
                                     MODELS[model_name],
                                     custom_pipeline="lpw_stable_diffusion",
-                                    torch_dtype=torch.float16,
-                                    cache_dir=MODEL_CACHE,
-                                ).to(device)
+                                    torch_dtype=torch.float16).to(device)
             self.models[model_name].enable_xformers_memory_efficient_attention()
             self.models[model_name].feature_extractor = self.models["Taiyi-Chinese-v0.1"].feature_extractor
             self.models[model_name].safety_checker =  self.models["Taiyi-Chinese-v0.1"].safety_checker
