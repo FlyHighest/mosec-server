@@ -1,5 +1,4 @@
 from diffusers import DiffusionPipeline
-from params.constants import MODELS,MODEL_CACHE
 import torch
 from .scheduler import make_scheduler
 import traceback
@@ -13,8 +12,8 @@ class Text2ImageModel:
         for model_name in model_dict.keys():
             print("Load model",model_name)
             self.models[model_name]= DiffusionPipeline.from_pretrained(
-                                    MODELS[model_name],
-                                    custom_pipeline="lpw_stable_diffusion",
+                                    model_dict[model_name],
+                                    #custom_pipeline="lpw_stable_diffusion",
                                     torch_dtype=torch.float16).to(device)
             self.models[model_name].enable_xformers_memory_efficient_attention()
             self.models[model_name].feature_extractor = self.models["Taiyi-Chinese-v0.1"].feature_extractor
@@ -30,7 +29,7 @@ class Text2ImageModel:
 
             pipeline.scheduler = make_scheduler(scheduler_name,model_name)
             with torch.inference_mode():
-                output = pipeline.text2img(generator=torch.Generator(device=self.device).manual_seed(seed),**pipeline_params)
+                output = pipeline(generator=torch.Generator(device=self.device).manual_seed(seed),**pipeline_params)
                                     
             image = output.images[0]
             nsfw_detect = output.nsfw_content_detected[0]
