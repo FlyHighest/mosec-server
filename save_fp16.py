@@ -6,6 +6,11 @@ from params.constants import MODELS,MODEL_CACHE, MODELS_FP16
 from typing import Dict
 from models . text2image  import Text2ImageModel
 if __name__=="__main__":
-    m = Text2ImageModel(torch.device("cuda"),0, MODELS)
-    for model_name, save_dir in MODELS_FP16.items():
-        m.models[model_name].save_pretrained(save_dir)
+    for model_name in MODELS_FP16.keys():
+        p = DiffusionPipeline.from_pretrained(
+                                    MODELS[model_name],
+                                    custom_pipeline="lpw_stable_diffusion",
+                                    torch_dtype=torch.float16,
+                                    cache_dir=MODEL_CACHE
+                                ).to("cuda")
+        p.save_pretrained(MODELS_FP16[model_name], safe_serialization=True)
