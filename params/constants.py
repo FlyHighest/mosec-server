@@ -10,9 +10,9 @@ MODELS = {
 }
 
 MODELS_FP16 = {
-    "Taiyi-Chinese-v0.1": MODEL_CACHE+"fp16--Taiyi-Stable-Diffusion-1B-Chinese-v0.1",
-    "Taiyi-Chinese-Anime-v0.1": MODEL_CACHE+"fp16--Taiyi-Stable-Diffusion-1B-Anime-Chinese-v0.1",
-    "Stable-Diffusion-2.1": MODEL_CACHE+"fp16--stable-diffusion-2-1",
-    "OpenJourney": MODEL_CACHE+"fp16--openjourney",
-    "Anything-v4.5":  MODEL_CACHE+"fp16--anything-v4.5"
+    "Taiyi-Chinese-v0.1": MODEL_CACHE+"/fp16--Taiyi-Stable-Diffusion-1B-Chinese-v0.1",
+    "Taiyi-Chinese-Anime-v0.1": MODEL_CACHE+"/fp16--Taiyi-Stable-Diffusion-1B-Anime-Chinese-v0.1",
+    "Stable-Diffusion-2.1": MODEL_CACHE+"/fp16--stable-diffusion-2-1",
+    "OpenJourney": MODEL_CACHE+"/fp16--openjourney",
+    "Anything-v4.5":  MODEL_CACHE+"/fp16--anything-v4.5"
 }
