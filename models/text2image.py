@@ -41,7 +41,7 @@ class Text2ImageModel:
                 output = pipeline(generator=torch.Generator(device=self.device).manual_seed(seed),**pipeline_params)
                                     
             image = output.images[0]
-            nsfw_detect = output.nsfw_content_detected[0]
+            nsfw_detect = False # output.nsfw_content_detected[0]
             if nsfw_detect:
                 return "NSFW"
 
