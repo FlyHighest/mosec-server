@@ -16,3 +16,4 @@ MODELS_FP16 = {
     "Protogen-x5.8":  MODEL_CACHE+"/fp16--Protogen-x5.8",
     "Anything-v4.5":  MODEL_CACHE+"/fp16--anything-v4.5"
 }
+

@@ -1,9 +1,18 @@
-from diffusers import DiffusionPipeline
+from diffusers import DiffusionPipeline,StableDiffusionPipeline
+from .lpw_pipeline import StableDiffusionLongPromptWeightingPipeline
 import torch
 from .scheduler import make_scheduler
 import traceback
 from transformers import AutoTokenizer
 from typing import Dict
+
+MODEL_PIPELINE = {
+    "Taiyi-Chinese-v0.1": StableDiffusionPipeline,
+    "Taiyi-Chinese-Anime-v0.1": StableDiffusionPipeline,
+    "Stable-Diffusion-2.1": StableDiffusionLongPromptWeightingPipeline,
+    "Protogen-x5.8":  StableDiffusionLongPromptWeightingPipeline,
+    "Anything-v4.5":  StableDiffusionLongPromptWeightingPipeline
+}
 
 class Text2ImageModel:
     def __init__(self, device, worker_id, model_dict) -> None:
@@ -11,7 +20,7 @@ class Text2ImageModel:
 
         for model_name in model_dict.keys():
             print("Load model",model_name)
-            self.models[model_name]= DiffusionPipeline.from_pretrained(
+            self.models[model_name]= MODEL_PIPELINE[model_name].from_pretrained(
                                     model_dict[model_name],
                                     #custom_pipeline="lpw_stable_diffusion",
                                     torch_dtype=torch.float16).to(device)
