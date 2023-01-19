@@ -50,7 +50,7 @@ class Preprocess(Worker):
         prompt_str = prompt_str.replace("{","(")
         prompt_str = prompt_str.replace("}",")")
         prompt_str = prompt_str.replace("。",",")
-
+        return prompt_str
 
     def forward(self, data: dict):
         try:
