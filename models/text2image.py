@@ -26,7 +26,7 @@ class Text2ImageModel:
                                     torch_dtype=torch.float16).to(device)
             self.models[model_name].enable_xformers_memory_efficient_attention()
             self.models[model_name].feature_extractor = self.models["Taiyi-Chinese-v0.1"].feature_extractor
-            self.models[model_name].safety_checker =  self.models["Taiyi-Chinese-v0.1"].safety_checker
+            self.models[model_name].safety_checker =  None #self.models["Taiyi-Chinese-v0.1"].safety_checker
         
         self.worker_id = worker_id
         self.device = device
