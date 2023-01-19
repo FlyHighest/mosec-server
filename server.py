@@ -45,6 +45,13 @@ class Preprocess(Worker):
     def __init__(self) -> None:
         super().__init__()
 
+    def prompt_format(self, prompt_str):
+        prompt_str = prompt_str.replace("，",",")
+        prompt_str = prompt_str.replace("{","(")
+        prompt_str = prompt_str.replace("}",")")
+        prompt_str = prompt_str.replace("。",",")
+
+
     def forward(self, data: dict):
         try:
             match data['type']:
@@ -52,8 +59,8 @@ class Preprocess(Worker):
                     model_name = data['model_name']
                     scheduler_name = data['scheduler_name']
                     seed = int(data['seed'])
-                    data['prompt'] = data['prompt'].replace("，",",")
-                    data['negative_prompt'] = data['negative_prompt'].replace("，",",")
+                    data['prompt'] = self.prompt_format(data['prompt'])
+                    data['negative_prompt'] = self.prompt_format(data['negative_prompt'])
 
                     del data['seed']
                     del data['model_name']
