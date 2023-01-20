@@ -137,7 +137,7 @@ class Postprocess(Worker):
 if __name__ == "__main__":
     from gpuinfo import GPUInfo
     num_gpus = len(GPUInfo.gpu_usage()[0])
-    
+    print("num gpus ",num_gpus)
     server = Server()
     server.append_worker(Preprocess, num=4)
     server.append_worker(Inference, num=num_gpus,
