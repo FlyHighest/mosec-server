@@ -92,11 +92,8 @@ class Inference(Worker):
         # initialization
         torch.backends.cudnn.benchmark = True
         worker_id = self.worker_id - 1
-        self.device = (
-            torch.device(f"cuda:{worker_id}") if torch.cuda.is_available(
-            ) else torch.device("cpu")
-        )
-        logger.info("using computing device: %s", self.device)
+        
+        logger.info("using worker_id "+str(worker_id))
 
         # prepare models
         self.text2image_model = Text2ImageModel(worker_id)
