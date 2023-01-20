@@ -6,7 +6,6 @@ import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
-from params.constants import MODELS,MODELS_FP16
 from models import Text2ImageModel,UpscaleModel
 from storage.storage_tool import StorageTool
 
@@ -47,8 +46,6 @@ class Preprocess(Worker):
 
     def prompt_format(self, prompt_str):
         prompt_str = prompt_str.replace("，",",")
-        prompt_str = prompt_str.replace("{","(")
-        prompt_str = prompt_str.replace("}",")")
         prompt_str = prompt_str.replace("。",",")
         return prompt_str
 
@@ -57,21 +54,15 @@ class Preprocess(Worker):
             match data['type']:
                 case "text2image":
                     model_name = data['model_name']
-                    scheduler_name = data['scheduler_name']
-                    seed = int(data['seed'])
                     data['prompt'] = self.prompt_format(data['prompt'])
                     data['negative_prompt'] = self.prompt_format(data['negative_prompt'])
 
-                    del data['seed']
                     del data['model_name']
-                    del data['scheduler_name']
                     del data['type']
 
                     ret = {
                                 "type": "text2image",
                                 "model_name":model_name, 
-                                "scheduler_name":scheduler_name,
-                                "seed": seed,
                                 "pipeline_params": data
                             }
 
@@ -108,7 +99,7 @@ class Inference(Worker):
         logger.info("using computing device: %s", self.device)
 
         # prepare models
-        self.text2image_model = Text2ImageModel(self.device, worker_id, MODELS_FP16)
+        self.text2image_model = Text2ImageModel()
         self.upscale_model = UpscaleModel(self.device, worker_id)
 
     def forward(self, preprocess_data: dict):
