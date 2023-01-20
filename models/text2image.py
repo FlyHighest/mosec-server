@@ -9,9 +9,9 @@ from typing import Dict
 MODEL_PIPELINE = {
     "Taiyi-Chinese-v0.1": StableDiffusionPipeline,
     "Taiyi-Chinese-Anime-v0.1": StableDiffusionPipeline,
-    "Stable-Diffusion-2.1": StableDiffusionLongPromptWeightingPipeline,
-    "Protogen-x5.8":  StableDiffusionLongPromptWeightingPipeline,
-    "Anything-v4.5":  StableDiffusionLongPromptWeightingPipeline
+    "Stable-Diffusion-2.1": StableDiffusionPipeline,
+    "Protogen-x5.8":  StableDiffusionPipeline,
+    "Anything-v4.5":  StableDiffusionPipeline
 }
 
 class Text2ImageModel:
