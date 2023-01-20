@@ -91,7 +91,7 @@ class Inference(Worker):
         super().__init__()
         # initialization
         torch.backends.cudnn.benchmark = True
-        worker_id = self.worker_id - 1
+        worker_id = self.worker_id
         
         logger.info("using worker_id "+str(worker_id))
 
