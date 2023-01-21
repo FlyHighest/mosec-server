@@ -6,7 +6,7 @@ import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
-from models import Text2ImageModel,UpscaleModel
+from models import Text2ImageModel,UpscaleModel,MagicPrompt
 from storage.storage_tool import StorageTool
 
 logger = logging.getLogger()
@@ -73,6 +73,10 @@ class Preprocess(Worker):
                         "type": "upscale",
                         "img": img
                     }
+                case "enhanceprompt":
+                    ret = {
+                        "starting_text": data["starting_text"]
+                    }
 
 
         except KeyError as err:
@@ -98,16 +102,26 @@ class Inference(Worker):
         # prepare models
         self.text2image_model = Text2ImageModel(worker_id)
         self.upscale_model = UpscaleModel(self.device, worker_id)
+        self.prompt_enh_model = MagicPrompt(self.device)
 
     def forward(self, preprocess_data: dict):
         match preprocess_data["type"]:
             case "text2image":
                 del preprocess_data["type"]
-                img_path = self.text2image_model(**preprocess_data)
+                ret = {
+                    "img_path" : self.text2image_model(**preprocess_data)
+                }
+                
             case "upscale":
                 del preprocess_data["type"]
-                img_path = self.upscale_model(**preprocess_data)
-        return img_path
+                ret = {
+                    "img_path" : self.upscale_model(**preprocess_data)
+                }
+            case "enhanceprompt":
+                ret = {
+                    "enhanced_text": self.prompt_enh_model(starting_text=preprocess_data["starting_text"])
+                }
+        return ret
 
 
 class Postprocess(Worker):
@@ -117,21 +131,26 @@ class Postprocess(Worker):
         super().__init__()
         self.storage_tool = StorageTool()
 
-    def forward(self, img_path):
-        if img_path == "Error":
+    def forward(self, inference_data):
+        if "img_path" in inference_data:
+            img_path = inference_data["img_path"]
+            if img_path == "Error":
+                return {
+                    "img_url": "Error",
+                }
+            elif img_path == "NSFW":
+                return {
+                    "img_url": "NSFW",
+                }
+            else: 
+                img_url = self.storage_tool.upload(img_path)
+                return {
+                    "img_url": img_url,
+                }
+        else:
             return {
-                "img_url": "Error",
+                "enhanced_text": inference_data["enhanced_text"]
             }
-        elif img_path == "NSFW":
-            return {
-                "img_url": "NSFW",
-            }
-        else: 
-            img_url = self.storage_tool.upload(img_path)
-            return {
-                "img_url": img_url,
-            }
-        
 
 
 if __name__ == "__main__":
