@@ -75,6 +75,7 @@ class Preprocess(Worker):
                     }
                 case "enhanceprompt":
                     ret = {
+                        "type": "enhanceprompt",
                         "starting_text": data["starting_text"]
                     }
 

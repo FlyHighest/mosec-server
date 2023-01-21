@@ -7,7 +7,7 @@ class MagicPrompt:
     def __init__(self, device) -> None:
         
         self.gpt2_pipe = pipeline('text-generation', model='Gustavosta/MagicPrompt-Stable-Diffusion', tokenizer='gpt2',device=device)
-        with open("../ideas.txt", "r") as f:
+        with open("ideas.txt", "r") as f:
             self.line = f.readlines()
 
 
