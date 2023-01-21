@@ -12,7 +12,7 @@ class MagicPrompt:
 
 
     def __call__(self, starting_text):
-        seed = random.randint(INT_RANGE[0],INT_RANGE[1]) 
+        seed = random.randint(0,INT_RANGE[1]) 
         set_seed(seed)
 
         if starting_text == "":
