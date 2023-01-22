@@ -15,7 +15,7 @@ class SafetyModel:
     def __call__(self, img:Image):
         safety_checker_input = self.featuer_extractor([img], return_tensors="pt").to(self.device)
         image, has_nsfw_concept = self.checker(
-                images=image, clip_input=safety_checker_input.pixel_values.to(torch.float16)
+                images=[img], clip_input=safety_checker_input.pixel_values.to(torch.float16)
             )
         if has_nsfw_concept[0]:
             return "NSFW"
