@@ -95,7 +95,7 @@ class Text2ImageModel:
                 "cfg_scale" : pipeline_params["guidance_scale"],
                 "width" : pipeline_params["width"],
                 "height" : pipeline_params["height"],
-                "restore_faces" : False,
+                "restore_faces" : True,
                 "negative_prompt" : pipeline_params["negative_prompt"]   
             }
             post_data = json.dumps(json_data)

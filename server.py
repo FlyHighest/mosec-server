@@ -6,7 +6,7 @@ import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
-from models import Text2ImageModel,UpscaleModel,MagicPrompt
+from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel
 from storage.storage_tool import StorageTool
 
 logger = logging.getLogger()
@@ -78,7 +78,13 @@ class Preprocess(Worker):
                         "type": "enhanceprompt",
                         "starting_text": data["starting_text"]
                     }
-
+                case "safety_check":
+                    img_bytes = httpx.get(data['img_url']).content
+                    img = Image.open(BytesIO(img_bytes)).convert("RGB")
+                    ret = {
+                        "type":"safety_check",
+                        "img": img
+                    }
 
         except KeyError as err:
             raise ValidationError(f"cannot find key {err}") from err
@@ -104,23 +110,32 @@ class Inference(Worker):
         self.text2image_model = Text2ImageModel(worker_id)
         self.upscale_model = UpscaleModel(self.device, worker_id)
         self.prompt_enh_model = MagicPrompt(self.device)
+        self.safety_checker = SafetyModel(self.device)
 
     def forward(self, preprocess_data: dict):
         match preprocess_data["type"]:
             case "text2image":
                 del preprocess_data["type"]
                 ret = {
+                    "type": "text2image",
                     "img_path" : self.text2image_model(**preprocess_data)
                 }
                 
             case "upscale":
                 del preprocess_data["type"]
                 ret = {
+                    "type":"upscale", 
                     "img_path" : self.upscale_model(**preprocess_data)
                 }
             case "enhanceprompt":
                 ret = {
+                    "type": "enhanceprompt",
                     "enhanced_text": self.prompt_enh_model(starting_text=preprocess_data["starting_text"])
+                }
+            case "safety_check":
+                ret = {
+                    "type" : "safety_check",
+                    "result" : self.safety_checker(img=preprocess_data['img'])
                 }
         return ret
 
@@ -133,26 +148,30 @@ class Postprocess(Worker):
         self.storage_tool = StorageTool()
 
     def forward(self, inference_data):
-        if "img_path" in inference_data:
-            img_path = inference_data["img_path"]
-            if img_path == "Error":
+        match inference_data["type"]:
+            case "text2image","upscale":
+                img_path = inference_data["img_path"]
+                if img_path == "Error":
+                    return {
+                        "img_url": "Error",
+                    }
+                elif img_path == "NSFW":
+                    return {
+                        "img_url": "NSFW",
+                    }
+                else: 
+                    img_url = self.storage_tool.upload(img_path)
+                    return {
+                        "img_url": img_url,
+                    }
+            case "enhanceprompt":
                 return {
-                    "img_url": "Error",
+                    "enhanced_text": inference_data["enhanced_text"]
                 }
-            elif img_path == "NSFW":
+            case "safety_check":
                 return {
-                    "img_url": "NSFW",
+                    "result": inference_data["result"]
                 }
-            else: 
-                img_url = self.storage_tool.upload(img_path)
-                return {
-                    "img_url": img_url,
-                }
-        else:
-            return {
-                "enhanced_text": inference_data["enhanced_text"]
-            }
-
 
 if __name__ == "__main__":
     from gpuinfo import GPUInfo
