@@ -149,7 +149,7 @@ class Postprocess(Worker):
 
     def forward(self, inference_data):
         match inference_data["type"]:
-            case "text2image","upscale":
+            case "text2image" | "upscale":
                 img_path = inference_data["img_path"]
                 if img_path == "Error":
                     return {
