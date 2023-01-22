@@ -14,7 +14,6 @@ class UpscaleModel:
         self.output_name = f"/tmp/output_ups_id{self.worker_id}.webp"
 
     def __call__(self, img) -> str:
-        return "Error"
         try:
             with torch.inference_mode():
                 sr_image = self.model.predict(img)
