@@ -1,9 +1,9 @@
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPFeatureExtractor
-import random ,torch 
-import re 
+import  torch 
+
 from PIL import Image 
-INT_RANGE = -2**31,2**31-1
+import numpy as np
 
 class SafetyModel:
     def __init__(self, device) -> None:
@@ -14,8 +14,9 @@ class SafetyModel:
 
     def __call__(self, img:Image):
         safety_checker_input = self.featuer_extractor([img], return_tensors="pt").to(self.device)
+        images=np.array(img)[None,...]
         image, has_nsfw_concept = self.checker(
-                images=[img], clip_input=safety_checker_input.pixel_values.to(torch.float16)
+                images=images, clip_input=safety_checker_input.pixel_values.to(torch.float16)
             )
         if has_nsfw_concept[0]:
             return "NSFW"
