@@ -10,7 +10,7 @@ class SafetyModel:
         self.device = device
         self.checker = StableDiffusionSafetyChecker.from_pretrained("runwayml/stable-diffusion-v1-5",subfolder="safety_checker",torch_dtype=torch.float16)
         self.checker.to(device)
-        self.featuer_extractor = CLIPFeatureExtractor.from_pretrained(CLIPFeatureExtractor.from_pretrained("CompVis/stable-diffusion-safety-checker"))    
+        self.featuer_extractor = CLIPFeatureExtractor.from_pretrained("CompVis/stable-diffusion-safety-checker")    
 
     def __call__(self, img:Image):
         safety_checker_input = self.featuer_extractor([img], return_tensors="pt").to(self.device)
