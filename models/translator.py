@@ -4,16 +4,10 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import math ,torch
 
 LANG_TO_FLORES = {
-    "ARABIC": "arb_Arab",
     "CHINESE": "zho_Hans",
-    "ENGLISH": "eng_Latn",
-    "FRENCH": "fra_Latn",
-    "JAPANESE": "jpn_Jpan",
-    "KOREAN": "kor_Hang",
-    "RUSSIAN": "rus_Cyrl",
-    "SPANISH": "spa_Latn",
+    "ENGLISH": "eng_Latn"
 }
-TRANSLATOR_MODEL_ID = "facebook/nllb-200-distilled-600M"
+TRANSLATOR_MODEL_ID = "Helsinki-NLP/opus-mt-zh-en"
 
 target_lang_score_max = 0.9
 target_lang = Language.ENGLISH
@@ -26,6 +20,13 @@ class Translator:
         self.detect_language = LanguageDetectorBuilder.from_all_languages().with_preloaded_language_models().build()
         self.translate_tokenizer = AutoTokenizer.from_pretrained(TRANSLATOR_MODEL_ID)
         self.translate_model = AutoModelForSeq2SeqLM.from_pretrained(TRANSLATOR_MODEL_ID)
+        self.translate_pipeline = pipeline(
+                'translation',
+                model=self.translate_model,
+                tokenizer=self.translate_tokenizer,
+                torch_dtype=torch.float16,
+                device=self.device
+            )
         self.target_flores = target_lang_flores
     
     def prompt_handle(self,prompt,negative_prompt):
@@ -58,19 +59,9 @@ class Translator:
         if text_lang_flores == target_lang_flores:
             return text 
         else:
-            translate_pipeline = pipeline(
-                'translation',
-                model=self.translate_model,
-                tokenizer=self.translate_tokenizer,
-                torch_dtype=torch.float16,
-                src_lang=text_lang_flores,
-                tgt_lang=target_lang_flores,
-                device=self.device
-            )
-
-        translate_output = translate_pipeline(text, max_length=500)
-        translated_text = translate_output[0]['translation_text']
-        return translated_text
+            translate_output = self.translate_pipeline(text)
+            translated_text = translate_output[0]['translation_text']
+            return translated_text
     
 
 if __name__=="__main__":
