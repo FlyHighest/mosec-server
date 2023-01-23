@@ -122,6 +122,8 @@ class Inference(Worker):
                         preprocess_data["pipeline_params"]['prompt'], 
                         preprocess_data["pipeline_params"]['negative_prompt'] 
                     )
+                if preprocess_data['model_name']=="OpenJourney" and not preprocess_data["pipeline_params"]['prompt'].startswith("mdjrny-v4 style"):
+                    preprocess_data["pipeline_params"]['prompt'] = "mdjrny-v4 style, " + preprocess_data["pipeline_params"]['prompt']
                 ret = {
                     "type": "text2image",
                     "img_path" : self.text2image_model(**preprocess_data)
