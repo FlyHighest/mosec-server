@@ -18,7 +18,7 @@ class StorageTool:
             token = self.q.upload_token("imagedraw",object_name)
             ret, _ = put_file(token,object_name,img_path,version="v2")
             assert ret['hash'] == etag(img_path)
-            self.bucket.delete_after_days("imagedraw",object_name, '7')
+            self.bucket.delete_after_days("imagedraw",object_name, '8')
             return qiniu_public_url+object_name
         except:
             traceback.print_exc()
