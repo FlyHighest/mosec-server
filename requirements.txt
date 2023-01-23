@@ -2,3 +2,6 @@ qiniu
 nanoid
 torch
 diffusers
+lingua-language-detector
+mosec
+transformers
