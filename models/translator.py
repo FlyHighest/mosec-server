@@ -89,7 +89,15 @@ class Translator:
         self.detect_language = LanguageDetectorBuilder.from_all_languages().with_preloaded_language_models().build()
         self.translate_tokenizer = AutoTokenizer.from_pretrained(TRANSLATOR_MODEL_ID)
         self.translate_model = AutoModelForSeq2SeqLM.from_pretrained(TRANSLATOR_MODEL_ID)
-        
+        self.target_flores = target_lang_flores
+    
+    def prompt_handle(self,prompt,negative_prompt):
+        fl1 = self.detect(prompt)
+        fl2 = self.detect(negative_prompt)
+        res1 = self.translate(prompt, fl1)
+        res2 = self.translate(negative_prompt, fl2)
+        return res1, res2
+
     def detect(self,text):
         confidence_values = self.detect_language.compute_language_confidence_values(text)
         target_lang_score = -math.inf

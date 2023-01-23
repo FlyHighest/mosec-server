@@ -6,7 +6,7 @@ import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
-from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel
+from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel,Translator
 from storage.storage_tool import StorageTool
 
 logger = logging.getLogger()
@@ -111,11 +111,14 @@ class Inference(Worker):
         self.upscale_model = UpscaleModel(self.device, worker_id)
         self.prompt_enh_model = MagicPrompt(self.device)
         self.safety_checker = SafetyModel(self.device)
+        self.translator = Translator(self.device)
 
     def forward(self, preprocess_data: dict):
         match preprocess_data["type"]:
             case "text2image":
                 del preprocess_data["type"]
+                preprocess_data['prompt'], preprocess_data['negative_prompt'] = \
+                    self.translator.prompt_handle(preprocess_data['prompt'], preprocess_data['negative_prompt'] )
                 ret = {
                     "type": "text2image",
                     "img_path" : self.text2image_model(**preprocess_data)
@@ -128,9 +131,14 @@ class Inference(Worker):
                     "img_path" : self.upscale_model(**preprocess_data)
                 }
             case "enhanceprompt":
+                starting_text = preprocess_data["starting_text"]
+                if self.translator.detect(starting_text) != self.translator.target_flores:
+                    enhanced = starting_text
+                else:
+                    enhanced = self.prompt_enh_model(starting_text=starting_text)
                 ret = {
                     "type": "enhanceprompt",
-                    "enhanced_text": self.prompt_enh_model(starting_text=preprocess_data["starting_text"])
+                    "enhanced_text": enhanced
                 }
             case "safety_check":
                 ret = {
