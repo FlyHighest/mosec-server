@@ -1,14 +1,14 @@
 import logging
 from io import BytesIO
 from PIL import Image
-
+import json
 import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
 from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel,Translator
 from storage.storage_tool import StorageTool
-
+import hashlib
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter(
@@ -47,6 +47,9 @@ class Preprocess(Worker):
     def prompt_format(self, prompt_str):
         prompt_str = prompt_str.replace("，",",")
         prompt_str = prompt_str.replace("。",",")
+        prompt_str = prompt_str.replace("{","(")
+        prompt_str = prompt_str.replace("}",")")
+
         return prompt_str
 
     def forward(self, data: dict):
@@ -56,14 +59,15 @@ class Preprocess(Worker):
                     model_name = data['model_name']
                     data['prompt'] = self.prompt_format(data['prompt'])
                     data['negative_prompt'] = self.prompt_format(data['negative_prompt'])
-
+                    image_gen_id = hashlib.sha1(json.dumps(data).encode('utf-8')).hexdigest()
                     del data['model_name']
                     del data['type']
 
                     ret = {
                                 "type": "text2image",
                                 "model_name":model_name, 
-                                "pipeline_params": data
+                                "pipeline_params": data,
+                                "gen_id" : image_gen_id
                             }
 
                 case "upscale":
@@ -126,7 +130,8 @@ class Inference(Worker):
                     preprocess_data["pipeline_params"]['prompt'] = "mdjrny-v4 style, " + preprocess_data["pipeline_params"]['prompt']
                 ret = {
                     "type": "text2image",
-                    "img_path" : self.text2image_model(**preprocess_data)
+                    "img_path" : self.text2image_model(preprocess_data['model_name'],preprocess_data["pipeline_params"] ),
+                    "gen_id": preprocess_data['gen_id']
                 }
                 
             case "upscale":
@@ -164,6 +169,7 @@ class Postprocess(Worker):
         match inference_data["type"]:
             case "text2image" | "upscale":
                 img_path = inference_data["img_path"]
+                gen_id = inference_data['gen_id']
                 if img_path == "Error":
                     return {
                         "img_url": "Error",
@@ -173,7 +179,7 @@ class Postprocess(Worker):
                         "img_url": "NSFW",
                     }
                 else: 
-                    img_url = self.storage_tool.upload(img_path)
+                    img_url = self.storage_tool.upload(img_path,gen_id)
                     return {
                         "img_url": img_url,
                     }

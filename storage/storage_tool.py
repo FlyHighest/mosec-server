@@ -12,8 +12,8 @@ class StorageTool:
         self.q = Auth(qiniu_access_key_id,qiniu_access_key_secret)
         self.bucket = BucketManager(self.q)
   
-    def upload(self,img_path):
-        object_name = time.strftime("%Y-%m-%d")+"/"+nanoid.generate(IMAGE_ID_ALPHABET, size=25)+".webp"
+    def upload(self,img_path,gen_id):
+        object_name = time.strftime("%Y-%m-%d")+"/"+gen_id+".webp"
         try:
             token = self.q.upload_token("imagedraw",object_name)
             ret, _ = put_file(token,object_name,img_path,version="v2")
