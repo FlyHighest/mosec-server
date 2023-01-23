@@ -117,8 +117,11 @@ class Inference(Worker):
         match preprocess_data["type"]:
             case "text2image":
                 del preprocess_data["type"]
-                preprocess_data['prompt'], preprocess_data['negative_prompt'] = \
-                    self.translator.prompt_handle(preprocess_data['prompt'], preprocess_data['negative_prompt'] )
+                preprocess_data["pipeline_params"]['prompt'], preprocess_data["pipeline_params"]['negative_prompt'] = \
+                    self.translator.prompt_handle(
+                        preprocess_data["pipeline_params"]['prompt'], 
+                        preprocess_data["pipeline_params"]['negative_prompt'] 
+                    )
                 ret = {
                     "type": "text2image",
                     "img_path" : self.text2image_model(**preprocess_data)
