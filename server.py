@@ -8,7 +8,6 @@ from mosec import Server, Worker
 from mosec.errors import ValidationError
 from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel,Translator
 from storage.storage_tool import StorageTool
-import hashlib
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter(
@@ -59,9 +58,10 @@ class Preprocess(Worker):
                     model_name = data['model_name']
                     data['prompt'] = self.prompt_format(data['prompt'])
                     data['negative_prompt'] = self.prompt_format(data['negative_prompt'])
-                    image_gen_id = hashlib.sha1(json.dumps(data).encode('utf-8')).hexdigest()
+                    image_gen_id = data['gen_id']
                     del data['model_name']
                     del data['type']
+                    del data['gen_id']
 
                     ret = {
                                 "type": "text2image",
