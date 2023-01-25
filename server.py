@@ -8,6 +8,8 @@ from mosec import Server, Worker
 from mosec.errors import ValidationError
 from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel,Translator
 from storage.storage_tool import StorageTool
+import nanoid 
+import string 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter(
@@ -169,7 +171,10 @@ class Postprocess(Worker):
         match inference_data["type"]:
             case "text2image" | "upscale":
                 img_path = inference_data["img_path"]
-                gen_id = inference_data['gen_id']
+                if 'gen_id' in inference_data:
+                    gen_id = inference_data['gen_id']
+                else:
+                    gen_id = "highres"+nanoid.generate(alphabet=string.ascii_lowercase, size=10)
                 if img_path == "Error":
                     return {
                         "img_url": "Error",
