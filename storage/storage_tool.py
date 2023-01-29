@@ -1,25 +1,24 @@
 import sys 
 sys.path.append(".")
-from qiniu import Auth, put_file, etag, BucketManager
-from params.secret import qiniu_access_key_id,qiniu_access_key_secret,qiniu_public_url
-import nanoid 
-import traceback,time
+import boto3
+from params.secret import r2_access_key_id,r2_access_key_secret,r2_account_id
+import os 
+import traceback
 
-IMAGE_ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
 class StorageTool:
     def __init__(self) -> None:
-        self.q = Auth(qiniu_access_key_id,qiniu_access_key_secret)
-        self.bucket = BucketManager(self.q)
+        self.s3 = boto3.resource('s3',
+            endpoint_url = f'https://{r2_account_id}.r2.cloudflarestorage.com',
+            aws_access_key_id = r2_access_key_id,
+            aws_secret_access_key = r2_access_key_secret
+        )
   
     def upload(self,img_path,gen_id):
-        object_name = time.strftime("%Y-%m-%d")+"/"+gen_id+".webp"
+        object_name = gen_id+".webp"
         try:
-            token = self.q.upload_token("imagedraw",object_name)
-            ret, _ = put_file(token,object_name,img_path,version="v2")
-            assert ret['hash'] == etag(img_path)
-            self.bucket.delete_after_days("imagedraw",object_name, '8')
-            return qiniu_public_url+object_name
+            self.s3.Object("imagedraw",object_name).upload_file(img_path)
+            return object_name
         except:
             traceback.print_exc()
             print("Error while uploading")
@@ -27,5 +26,6 @@ class StorageTool:
 
 if __name__=="__main__":
     storage_tools = StorageTool()
-    storage_tools.upload("/Users/zhangtianyu/rabit-newyear.jpg")
-        
+    x = storage_tools.upload("/Users/zhangtianyu/rabit-newyear.jpg","test2")
+    print(os.path.join("https://storage.yunjing.gallery",x))
+    print(x)
