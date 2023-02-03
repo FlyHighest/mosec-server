@@ -1,24 +1,35 @@
 import sys 
 sys.path.append(".")
-import boto3
-from params.secret import r2_access_key_id,r2_access_key_secret,r2_account_id
+import httpx
+from params.secret import upload_url,upload_key
 import os 
 import traceback
-
+import json 
 
 class StorageTool:
     def __init__(self) -> None:
-        self.s3 = boto3.resource('s3',
-            endpoint_url = f'https://{r2_account_id}.r2.cloudflarestorage.com',
-            aws_access_key_id = r2_access_key_id,
-            aws_secret_access_key = r2_access_key_secret
-        )
+        self.header = {
+                "X-API-Key":upload_key
+        }
+        
   
-    def upload(self,img_path,gen_id):
-        object_name = gen_id+".webp"
+    def upload(self, img_path):
         try:
-            self.s3.Object("imagedraw",object_name).upload_file(img_path)
-            return object_name
+            payload = {
+                'format': 'json',
+                'title': 'user generated image'
+            }
+
+            files = [
+                ('source', open(img_path,'rb'))
+            ]
+
+            res = httpx.post(upload_url,
+                timeout=20,
+                files=files,headers=self.header,json=payload)
+            assert res.status_code==200
+            ret = json.loads(res.content.decode('utf-8'))
+            return ret['image']["url"]
         except:
             traceback.print_exc()
             print("Error while uploading")

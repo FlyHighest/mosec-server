@@ -184,7 +184,7 @@ class Postprocess(Worker):
                         "img_url": "NSFW",
                     }
                 else: 
-                    img_url = self.storage_tool.upload(img_path,gen_id)
+                    img_url = self.storage_tool.upload(img_path)
                     return {
                         "img_url": img_url,
                     }
