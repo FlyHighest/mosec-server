@@ -74,7 +74,7 @@ class Text2ImageModel:
     def __init__(self, worker_id) -> None:
         self.worker_id = worker_id
         self.model_url = MODEL_URL[worker_id]
-        self.output_name = f"/tmp/output_t2i_id{self.worker_id}.webp"
+        self.output_name = f"/tmp/output_t2i_id{self.worker_id}.jpeg"
 
     def __call__(self, model_name,  pipeline_params: dict):
         try:
@@ -111,7 +111,7 @@ class Text2ImageModel:
             elif 'image' in r.keys():
                 images = [Image.open(io.BytesIO(base64.b64decode(r['image'])))]
             image = images[0]
-            image.save(self.output_name, format='webp', quality=90)
+            image.save(self.output_name, format='jpeg', quality=90)
             return self.output_name
 
         except:
