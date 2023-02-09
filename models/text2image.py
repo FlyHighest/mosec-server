@@ -1,9 +1,11 @@
 import traceback
-from params.constants import MODEL_URL
+from params.constants import MODEL_URL,MODEL_PORT
 import json ,httpx
 from PIL import Image 
 import base64
 import io
+import webuiapi
+
 class Text2ImageModel:
     '''
     webui json data
@@ -73,20 +75,13 @@ class Text2ImageModel:
     '''
     def __init__(self, worker_id) -> None:
         self.worker_id = worker_id
-        self.model_url = MODEL_URL[worker_id]
-        self.output_name = f"/tmp/output_t2i_id{self.worker_id}.jpeg"
+        #self.model_url = MODEL_URL[worker_id]
+        self.api = webuiapi.WebUIApi(port=MODEL_PORT[worker_id])
+        self.output_name = f"/tmp/yunjing_id{self.worker_id}.jpeg"
+        print(f"build txt2img api in worker {worker_id}, port={MODEL_PORT[worker_id]}")
 
     def __call__(self, model_name,  pipeline_params: dict):
         try:
-            # prompt = pipeline_params["prompt"]
-            # seed = pipeline_params["seed"]
-            # sampler_name = pipeline_params["scheduler_name"]
-            # steps = pipeline_params["num_inference_steps"]
-            # cfg_scale = pipeline_params["guidance_scale"]
-            # width = pipeline_params["width"]
-            # height = pipeline_params["height"]
-            # restore_faces = False
-            # negative_prompt = pipeline_params["negative_prompt"]
             json_data = {
                 "prompt" : pipeline_params["prompt"],
                 "seed" : pipeline_params["seed"],
@@ -98,23 +93,17 @@ class Text2ImageModel:
                 "restore_faces" : True,
                 "negative_prompt" : pipeline_params["negative_prompt"]   
             }
-            post_data = json.dumps(json_data)
-            prediction = httpx.post(
-                self.model_url[model_name],
-                data=post_data,
-                timeout=40000
-            )
-            r = json.loads(prediction.content)
-            images = []
-            if 'images' in r.keys():
-                images = [Image.open(io.BytesIO(base64.b64decode(i))) for i in r['images']]
-            elif 'image' in r.keys():
-                images = [Image.open(io.BytesIO(base64.b64decode(r['image'])))]
-            image = images[0]
+            if model_name=="ACertainThing":
+                self.api.set_options({"CLIP_stop_at_last_layers":2})
+            else:
+                self.api.set_options({"CLIP_stop_at_last_layers":1})
+            self.api.util_set_model(model_name)
+            result = self.api.txt2img(**json_data)
+            image = result.image
             image.save(self.output_name, format='jpeg', quality=90)
             return self.output_name
 
         except:
             traceback.print_exc()
-            print("Error while generating")
+            print("Error while generating with model "+model_name)
             return "Error"
