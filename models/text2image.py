@@ -101,9 +101,9 @@ class Text2ImageModel:
             result = self.api.txt2img(**json_data)
             image = result.image
             image.save(self.output_name, format='jpeg', quality=90)
-            return self.output_name
+            return self.output_name, image
 
         except:
             traceback.print_exc()
             print("Error while generating with model "+model_name)
-            return "Error"
+            return "Error",None

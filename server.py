@@ -130,11 +130,22 @@ class Inference(Worker):
                     )
                 if preprocess_data['model_name']=="OpenJourney" and not preprocess_data["pipeline_params"]['prompt'].startswith("mdjrny-v4 style"):
                     preprocess_data["pipeline_params"]['prompt'] = "mdjrny-v4 style, " + preprocess_data["pipeline_params"]['prompt']
+                
+                generated_img_path, generated_image = self.text2image_model(preprocess_data['model_name'],preprocess_data["pipeline_params"] )
+                
+                if self.safety_checker.has_nsfw(generated_image):
+                    nsfw = True 
+                else:
+                    nsfw = False
+
+
                 ret = {
                     "type": "text2image",
-                    "img_path" : self.text2image_model(preprocess_data['model_name'],preprocess_data["pipeline_params"] ),
-                    "gen_id": preprocess_data['gen_id']
+                    "img_path" : generated_img_path,
+                    "gen_id": preprocess_data['gen_id'],
+                    "nsfw": nsfw
                 }
+
                 
             case "upscale":
                 del preprocess_data["type"]

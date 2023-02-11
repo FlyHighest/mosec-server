@@ -22,3 +22,9 @@ class SafetyModel:
             return "NSFW"
         else:
             return "OK"
+    
+    def has_nsfw(self,image):
+        if self.__call__(image)=="NSFW":
+            return True
+        else:
+            return False 
