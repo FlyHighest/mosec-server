@@ -13,12 +13,14 @@ class StorageTool:
         }
         
   
-    def upload(self, img_path):
+    def upload(self, img_path,expire):
         try:
             payload = {
                 'format': 'json',
                 'title': 'user generated image'
             }
+            if expire is not None:
+                payload['expiration']=expire
 
             files = [
                 ('source', open(img_path,'rb'))

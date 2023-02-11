@@ -5,3 +5,4 @@ diffusers
 lingua-language-detector
 mosec
 transformers
+clip

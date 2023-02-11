@@ -34,7 +34,7 @@ class AestheticModel:
         with torch.no_grad():
             img_features = self.clip_model.encode_image(img)
             img_features /= img_features.norm(dim=-1,keepdim=True)
-            score = self.predictor(img_features)
+            score = self.predictor(img_features.type(torch.cuda.FloatTensor))
             score = score.item()
         return score 
 

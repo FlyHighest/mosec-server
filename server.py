@@ -6,7 +6,7 @@ import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
-from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel,Translator
+from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel,Translator,AestheticModel
 from storage.storage_tool import StorageTool
 import nanoid 
 import string 
@@ -118,6 +118,7 @@ class Inference(Worker):
         self.prompt_enh_model = MagicPrompt(self.device)
         self.safety_checker = SafetyModel(self.device)
         self.translator = Translator(self.device)
+        self.aesthetic_model = AestheticModel(self.device)
 
     def forward(self, preprocess_data: dict):
         match preprocess_data["type"]:
@@ -138,12 +139,13 @@ class Inference(Worker):
                 else:
                     nsfw = False
 
-
+                score = self.aesthetic_model.get_score(generated_image)
                 ret = {
                     "type": "text2image",
                     "img_path" : generated_img_path,
                     "gen_id": preprocess_data['gen_id'],
-                    "nsfw": nsfw
+                    "nsfw": nsfw,
+                    "score": score
                 }
 
                 
@@ -180,24 +182,36 @@ class Postprocess(Worker):
 
     def forward(self, inference_data):
         match inference_data["type"]:
-            case "text2image" | "upscale":
+            case "text2image" :
                 img_path = inference_data["img_path"]
-                if 'gen_id' in inference_data:
-                    gen_id = inference_data['gen_id']
-                else:
-                    gen_id = "highres"+nanoid.generate(alphabet=string.ascii_lowercase, size=10)
+                
                 if img_path == "Error":
                     return {
                         "img_url": "Error",
                     }
-                elif img_path == "NSFW":
+                
+                else: 
+                    if inference_data['nsfw']:
+                        expire = "PT5M"
+                    else:
+                        expire = None
+                    img_url = self.storage_tool.upload(img_path,expire)
                     return {
-                        "img_url": "NSFW",
+                        "img_url": img_url,
+                        "score":inference_data['score'],
+                        "nsfw":inference_data['nsfw']
+                    }
+            case "upscale":
+                img_path = inference_data["img_path"]
+                
+                if img_path == "Error":
+                    return {
+                        "img_url": "Error",
                     }
                 else: 
                     img_url = self.storage_tool.upload(img_path)
                     return {
-                        "img_url": img_url,
+                        "img_url": img_url
                     }
             case "enhanceprompt":
                 return {

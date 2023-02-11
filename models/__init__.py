@@ -3,3 +3,4 @@ from .upscale import UpscaleModel
 from .magicprompt import MagicPrompt
 from .safety_model import SafetyModel
 from .translator import Translator
+from .aesthetic_model import  AestheticModel
