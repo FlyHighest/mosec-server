@@ -13,7 +13,7 @@ class StorageTool:
         }
         
   
-    def upload(self, img_path,expire):
+    def upload(self, img_path,expire=None):
         try:
             payload = {
                 'format': 'json',
@@ -28,7 +28,7 @@ class StorageTool:
 
             res = httpx.post(upload_url,
                 timeout=20,
-                files=files,headers=self.header,json=payload)
+                files=files,headers=self.header,data=payload)
             assert res.status_code==200
             ret = json.loads(res.content.decode('utf-8'))
             return ret['image']["url"]
@@ -39,6 +39,5 @@ class StorageTool:
 
 if __name__=="__main__":
     storage_tools = StorageTool()
-    x = storage_tools.upload("/Users/zhangtianyu/rabit-newyear.jpg","test2")
-    print(os.path.join("https://storage.yunjing.gallery",x))
-    print(x)
+    x = storage_tools.upload("nahida.jpg","PT5M")
+    
