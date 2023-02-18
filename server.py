@@ -155,10 +155,8 @@ class Inference(Worker):
                 }
             case "enhanceprompt":
                 starting_text = preprocess_data["starting_text"]
-                if self.translator.detect(starting_text) != self.translator.target_flores:
-                    enhanced = starting_text
-                else:
-                    enhanced = self.prompt_enh_model(starting_text=starting_text)
+                starting_text = self.translator.translate_chinese(starting_text)
+                enhanced = self.prompt_enh_model(starting_text=starting_text)
                 ret = {
                     "type": "enhanceprompt",
                     "enhanced_text": enhanced
