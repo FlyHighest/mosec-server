@@ -1,7 +1,7 @@
 import logging
 from io import BytesIO
 from PIL import Image
-import json
+import json,re
 import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
@@ -46,8 +46,7 @@ class Preprocess(Worker):
         super().__init__()
 
     def prompt_format(self, prompt_str):
-        prompt_str = prompt_str.replace("，",",")
-        prompt_str = prompt_str.replace("。",",")
+        prompt_str = re.sub(r"[\u3000-\u303F\uFF00-\uFFEF]",",",prompt_str)
         prompt_str = prompt_str.replace("{","(")
         prompt_str = prompt_str.replace("}",")")
 
