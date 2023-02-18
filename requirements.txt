@@ -7,3 +7,4 @@ mosec
 transformers
 clip
 autokeras
+facenet_pytorch

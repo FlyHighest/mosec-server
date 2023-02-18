@@ -6,7 +6,7 @@ import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
-from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel,Translator,AestheticSafetyModel
+from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel,Translator,AestheticSafetyModel,FaceDetector
 from storage.storage_tool import StorageTool
 import nanoid 
 import string 
@@ -90,6 +90,13 @@ class Preprocess(Worker):
                         "type":"safety_check",
                         "img": img
                     }
+                case "face_detect":
+                    img_bytes = httpx.get(data['img_url']).content
+                    img = Image.open(BytesIO(img_bytes)).convert("RGB")
+                    ret = {
+                        "type":"face_detect",
+                        "img": img
+                    }
 
         except KeyError as err:
             raise ValidationError(f"cannot find key {err}") from err
@@ -116,7 +123,8 @@ class Inference(Worker):
         self.upscale_model = UpscaleModel(self.device, worker_id)
         self.prompt_enh_model = MagicPrompt(self.device)
         self.translator = Translator(self.device)
-        self.aesthetic_model = AestheticSafetyModel(torch.device("cuda:0"))
+        self.aesthetic_model = AestheticSafetyModel(self.device)
+        self.face_detector = FaceDetector(self.device)
         
     def forward(self, preprocess_data: dict):
         match preprocess_data["type"]:
@@ -137,13 +145,14 @@ class Inference(Worker):
                     nsfw = True 
                 else:
                     nsfw = False
-
+                has_face = self.face_detector.detect(generated_image)
                 ret = {
                     "type": "text2image",
                     "img_path" : generated_img_path,
                     "gen_id": preprocess_data['gen_id'],
                     "nsfw": nsfw,
-                    "score": score
+                    "score": score,
+                    "face":has_face
                 }
 
                 
@@ -170,6 +179,12 @@ class Inference(Worker):
                 ret = {
                     "type" : "safety_check",
                     "result" : "NSFW" if nsfw else "OK"
+                }
+            case "face_detect":
+                has_face = self.face_detector.detect(preprocess_data['img'])
+                ret = {
+                    "type":"face_detec",
+                    "face":has_face
                 }
         return ret
 
@@ -200,7 +215,8 @@ class Postprocess(Worker):
                     ret = {
                         "img_url": img_url,
                         "score":inference_data['score'],
-                        "nsfw":inference_data['nsfw']
+                        "nsfw":inference_data['nsfw'],
+                        "face":inference_data['face']
                     }
                     print(ret)
                     return ret 
@@ -223,6 +239,10 @@ class Postprocess(Worker):
             case "safety_check":
                 return {
                     "result": inference_data["result"]
+                }
+            case "face_detect":
+                return {
+                    "face":inference_data["face"]
                 }
 
 if __name__ == "__main__":
