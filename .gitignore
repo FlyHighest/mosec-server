@@ -3,6 +3,7 @@ models-cache/
 models-cache
 secret.py
 log.txt
+testimage/
 .qiniu_pythonsdk_hostscache.json
 # Byte-compiled / optimized / DLL files
 __pycache__/

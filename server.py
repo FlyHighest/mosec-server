@@ -6,7 +6,7 @@ import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
-from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel,Translator,AestheticModel
+from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel,Translator,AestheticSafetyModel
 from storage.storage_tool import StorageTool
 import nanoid 
 import string 
@@ -116,10 +116,9 @@ class Inference(Worker):
         self.text2image_model = Text2ImageModel(worker_id)
         self.upscale_model = UpscaleModel(self.device, worker_id)
         self.prompt_enh_model = MagicPrompt(self.device)
-        self.safety_checker = SafetyModel(self.device)
         self.translator = Translator(self.device)
-        self.aesthetic_model = AestheticModel(self.device)
-
+        self.aesthetic_model = AestheticSafetyModel(torch.device("cuda:0"))
+        
     def forward(self, preprocess_data: dict):
         match preprocess_data["type"]:
             case "text2image":
@@ -134,12 +133,12 @@ class Inference(Worker):
                 
                 generated_img_path, generated_image = self.text2image_model(preprocess_data['model_name'],preprocess_data["pipeline_params"] )
                 
-                if self.safety_checker.has_nsfw(generated_image):
+                score,nsfw_prob = self.aesthetic_model.get_aes_and_nsfw(generated_image)
+                if nsfw_prob > 0.6:
                     nsfw = True 
                 else:
                     nsfw = False
 
-                score = self.aesthetic_model.get_score(generated_image)
                 ret = {
                     "type": "text2image",
                     "img_path" : generated_img_path,
@@ -166,9 +165,14 @@ class Inference(Worker):
                     "enhanced_text": enhanced
                 }
             case "safety_check":
+                score,nsfw_prob = self.aesthetic_model.get_aes_and_nsfw(preprocess_data['img'])
+                if nsfw_prob > 0.6:
+                    nsfw = True 
+                else:
+                    nsfw = False
                 ret = {
                     "type" : "safety_check",
-                    "result" : self.safety_checker(img=preprocess_data['img'])
+                    "result" : "NSFW" if nsfw else "OK"
                 }
         return ret
 
@@ -196,11 +200,13 @@ class Postprocess(Worker):
                     else:
                         expire = None
                     img_url = self.storage_tool.upload(img_path,expire)
-                    return {
+                    ret = {
                         "img_url": img_url,
                         "score":inference_data['score'],
                         "nsfw":inference_data['nsfw']
                     }
+                    print(ret)
+                    return ret 
             case "upscale":
                 img_path = inference_data["img_path"]
                 

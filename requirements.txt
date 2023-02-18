@@ -6,3 +6,4 @@ lingua-language-detector
 mosec
 transformers
 clip
+autokeras
