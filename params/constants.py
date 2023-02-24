@@ -20,3 +20,9 @@ MODEL_PORT={
     2:8002,
     3:8003
 }
+EXTRA_MODEL_LORA = {
+  "LORA-KoreanDollLikeness":",<lora:koreandollv10:0.66>",
+  "LORA-国风汉服少女":"<lora:hanfugirlv15:0.66>",
+  "LORA-国风汉服少女仿明风格":"<lora:hanfu2ming:0.66>",
+  "LORA-国风汉服少女仿宋风格":"<lora:hanfu2song:0.66>",
+}

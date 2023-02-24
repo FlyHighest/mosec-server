@@ -97,8 +97,20 @@ class Text2ImageModel:
                 self.api.set_options({"CLIP_stop_at_last_layers":2})
             else:
                 self.api.set_options({"CLIP_stop_at_last_layers":1})
+            if model_name=="YunJingAnime-v1":
+                extra_options = {
+                     "width": int(json_data['width']/2),
+                     "height": int(json_data['height']/2),
+                     "enable_hr": True,
+                     "hr_scale":  2,
+                     "hr_upscaler": webuiapi.HiResUpscaler.Latent,
+                     "hr_second_pass_steps": 20,
+                     "denoising_strength":0.6
+                }
+                json_data.update(extra_options)
             self.api.util_set_model(model_name)
             result = self.api.txt2img(**json_data)
+            # print(json_data)
             image = result.image
             image.save(self.output_name, format='jpeg', quality=90)
             return self.output_name, image

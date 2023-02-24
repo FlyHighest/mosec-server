@@ -10,6 +10,7 @@ from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel,Translat
 from storage.storage_tool import StorageTool
 import nanoid 
 import string 
+from params.constants import EXTRA_MODEL_LORA
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter(
@@ -60,6 +61,8 @@ class Preprocess(Worker):
                     data['prompt'] = self.prompt_format(data['prompt'])
                     data['negative_prompt'] = self.prompt_format(data['negative_prompt'])
                     image_gen_id = data['gen_id']
+                    if 'extra_model_name' in data and data['extra_model_name'] in EXTRA_MODEL_LORA:
+                        data['prompt'] += EXTRA_MODEL_LORA[data['extra_model_name']]
                     del data['model_name']
                     del data['type']
                     del data['gen_id']
@@ -135,11 +138,12 @@ class Inference(Worker):
                         preprocess_data["pipeline_params"]['prompt'], 
                         preprocess_data["pipeline_params"]['negative_prompt'] 
                     )
+                
                 if preprocess_data['model_name']=="OpenJourney" and not preprocess_data["pipeline_params"]['prompt'].startswith("mdjrny-v4 style"):
                     preprocess_data["pipeline_params"]['prompt'] = "mdjrny-v4 style, " + preprocess_data["pipeline_params"]['prompt']
                 
                 generated_img_path, generated_image = self.text2image_model(preprocess_data['model_name'],preprocess_data["pipeline_params"] )
-                
+                # print(preprocess_data["pipeline_params"]['prompt'])
                 score,nsfw_prob = self.aesthetic_model.get_aes_and_nsfw(generated_image)
                 if nsfw_prob > 0.6:
                     nsfw = True 
@@ -228,7 +232,7 @@ class Postprocess(Worker):
                         "img_url": "Error",
                     }
                 else: 
-                    img_url = self.storage_tool.upload(img_path)
+                    img_url = self.storage_tool.upload(img_path,expire="PT5M")
                     return {
                         "img_url": img_url
                     }
