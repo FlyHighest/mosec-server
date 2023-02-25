@@ -27,10 +27,83 @@ class ImageGenerationModel:
         self.extra_options["Counterfeit-V2.5"]={ 
             "override_settings":{'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors'}
                 }
+        
+        self.i2i_preprocess_map = {
+            "原图":"none",
+            "边缘提取(Canny)":"canny",
+            "边缘提取(HED)":"hed",
+            "线段提取":"mlsd",
+            "草图提取":"fake_scribble",
+            "人体姿态估计":"openpose",
+            "语义分割":"segmentation",
+            "深度估计":"depth",
+            "法线贴图估计":"normal"
+        }
+        self.i2i_model_map = {
+            "原模型":"None",
+            "ControlNet-Canny": 'control_sd15_canny [e3fe7712]',
+            "ControlNet-深度图":'control_sd15_depth [400750f6]',
+            "ControlNet-HED":'control_sd15_hed [13fee50b]',
+            "ControlNet-线段":'control_sd15_mlsd [e3705cfa]',
+            "ControlNet-法线贴图":'control_sd15_normal [63f96f7c]',
+            "ControlNet-人体姿态":'control_sd15_openpose [9ca67cc5]',
+            "ControlNet-草图":'control_sd15_scribble [c508311e]',
+            "ControlNet-语义分割":'control_sd15_seg [b9c1cc12]'
+        }
 
 
     def __call__(self, model_name,  pipeline_params: dict):
         pass 
+
+    def image2image_controlnet(self, params):
+        # 实际上调用的是txt2img接口，把引导图看成是图到图
+        try:
+            json_data = {
+                "prompt" : params["prompt"],
+                "seed" : params["seed"],
+                "sampler_name" : params["scheduler_name"],
+                "steps" : params["num_inference_steps"],
+                "cfg_scale" : params["guidance_scale"],
+                "width" : params["width"],
+                "height" : params["height"],
+                "restore_faces" : True,
+                "negative_prompt" : params["negative_prompt"],
+
+                "controlnet_input_image":[params["image"]],
+                "controlnet_weight":params["i2i_guidance_strength"],
+                "controlnet_module": self.i2i_preprocess_map[params['i2i_preprocess']],
+                "controlnet_model": self.i2i_model_map[params['i2i_model']]
+            }
+            model_name = params["model_name"]
+    
+            if model_name=="YunJingAnime-v1":
+                json_data["width"]= int(json_data['width']//2)
+                json_data["height"]= int(json_data['height']//2)
+                json_data.update({
+                     "enable_hr": True,
+                     "hr_scale":  2,
+                     "hr_upscaler": webuiapi.HiResUpscaler.Latent,
+                     "hr_second_pass_steps": 20,
+                     "denoising_strength":0.6
+                })
+                
+                
+            json_data.update(self.extra_options[model_name])
+
+            self.api.util_set_model(model_name)
+
+            result = self.api.img2img(**json_data)
+            # print(json_data)
+            image = result.image
+            image.save(self.output_name, format='jpeg', quality=90)
+            return self.output_name, image
+
+        except:
+            traceback.print_exc()
+            print("Error while generating with model "+model_name)
+            return "Error",None
+
+
 
     def image2image(self, params):
         try:
@@ -45,15 +118,10 @@ class ImageGenerationModel:
                 "restore_faces" : True,
                 "negative_prompt" : params["negative_prompt"],
                 "images":[params["image"]],
-                "denoising_strength":params["i2i_denoising_strength"],
+                "denoising_strength": 1 - params["i2i_guidance_strength"],
                 "initial_noise_multiplier": 1.0,
             }
             model_name = params["model_name"]
-            
-            if model_name=="YunJingAnime-v1":
-                json_data["width"]= int(json_data['width']//2)
-                json_data["height"]= int(json_data['height']//2)
-                
                 
             json_data.update(self.extra_options[model_name])
 
@@ -85,7 +153,6 @@ class ImageGenerationModel:
                 "negative_prompt" : params["negative_prompt"]   
             }
             model_name = params["model_name"]
-            extra_options = {}
             
             if model_name=="YunJingAnime-v1":
                 json_data["width"]= int(json_data['width']//2)
