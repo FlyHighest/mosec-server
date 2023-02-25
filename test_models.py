@@ -19,7 +19,6 @@ if __name__=="__main__":
             out.write(f"update image set score={score} where imgurl=\"{url}\"; \n")
             
         except:
-            print(url)
             continue
         
 

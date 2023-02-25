@@ -6,13 +6,11 @@ import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
-from models import Text2ImageModel,UpscaleModel,MagicPrompt,SafetyModel,Translator,AestheticSafetyModel,FaceDetector
+from models import ImageGenerationModel,UpscaleModel,MagicPrompt,Translator,AestheticSafetyModel,FaceDetector
 from storage.storage_tool import StorageTool
-import nanoid 
-import string 
 from params.constants import EXTRA_MODEL_LORA
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 formatter = logging.Formatter(
     "%(asctime)s - %(process)d - %(levelname)s - %(filename)s:%(lineno)s - %(message)s"
 )
@@ -25,23 +23,6 @@ INFERENCE_BATCH_SIZE = 1
 
 class Preprocess(Worker):
     """Sample Preprocess worker"""
-    '''
-    Data structure of each type
-    Type1: text2image
-        - model_name
-        - scheduler_name
-        - prompt
-        - negative_prompt
-        - height
-        - width
-        - num_inference_steps
-        - guidance_scale
-    
-    Type2: image2image
-
-    Type3: upscale
-    
-    '''
 
     def __init__(self) -> None:
         super().__init__()
@@ -54,26 +35,29 @@ class Preprocess(Worker):
         return prompt_str
 
     def forward(self, data: dict):
+        # data is text2image_data in Yunjing remote_tasks.py
         try:
             match data['type']:
-                case "text2image":
-                    model_name = data['model_name']
+                case "text2image"  | "image2image":
+
+                    # prompt preprocess
                     data['prompt'] = self.prompt_format(data['prompt'])
                     data['negative_prompt'] = self.prompt_format(data['negative_prompt'])
-                    image_gen_id = data['gen_id']
+                    
                     if 'extra_model_name' in data and data['extra_model_name'] in EXTRA_MODEL_LORA:
                         data['prompt'] += EXTRA_MODEL_LORA[data['extra_model_name']]
-                        del data['extra_model_name']
-                    del data['model_name']
-                    del data['type']
-                    del data['gen_id']
-                    
+                       
+                    if data['model_name']=="OpenJourney" and not data['prompt'].startswith("mdjrny-v4 style"):
+                        data['prompt'] = "mdjrny-v4 style, " + data['prompt']
+
+                    if 'i2i_url' in data:
+                        img_bytes = httpx.get(data['i2i_url']).content
+                        img = Image.open(BytesIO(img_bytes)).convert("RGB")
+                        data["image"] = img
 
                     ret = {
-                                "type": "text2image",
-                                "model_name":model_name, 
+                                "type": data['type'],
                                 "pipeline_params": data,
-                                "gen_id" : image_gen_id
                             }
 
                 case "upscale":
@@ -124,7 +108,7 @@ class Inference(Worker):
         logger.info("using worker_id "+str(worker_id))
 
         # prepare models
-        self.text2image_model = Text2ImageModel(worker_id)
+        self.image_gen_model = ImageGenerationModel(worker_id)
         self.upscale_model = UpscaleModel(self.device, worker_id)
         self.prompt_enh_model = MagicPrompt(self.device)
         self.translator = Translator(self.device)
@@ -133,19 +117,24 @@ class Inference(Worker):
         
     def forward(self, preprocess_data: dict):
         match preprocess_data["type"]:
-            case "text2image":
-                del preprocess_data["type"]
-                preprocess_data["pipeline_params"]['prompt'], preprocess_data["pipeline_params"]['negative_prompt'] = \
+            case "text2image"  | "image2image":
+                # 翻译中文
+                image_generation_data = preprocess_data["pipeline_params"]
+
+                image_generation_data['prompt'], image_generation_data['negative_prompt'] = \
                     self.translator.prompt_handle(
-                        preprocess_data["pipeline_params"]['prompt'], 
-                        preprocess_data["pipeline_params"]['negative_prompt'] 
+                        image_generation_data['prompt'], 
+                        image_generation_data['negative_prompt'] 
                     )
                 
-                if preprocess_data['model_name']=="OpenJourney" and not preprocess_data["pipeline_params"]['prompt'].startswith("mdjrny-v4 style"):
-                    preprocess_data["pipeline_params"]['prompt'] = "mdjrny-v4 style, " + preprocess_data["pipeline_params"]['prompt']
+                # 文生图
+                if preprocess_data["type"]=="text2image":
+                    generated_img_path, generated_image = self.image_gen_model.text2image(image_generation_data )
+                elif image_generation_data['i2i_model']=="原模型":
+                    generated_img_path, generated_image = self.image_gen_model.image2image(image_generation_data )
+
+
                 
-                generated_img_path, generated_image = self.text2image_model(preprocess_data['model_name'],preprocess_data["pipeline_params"] )
-                # print(preprocess_data["pipeline_params"]['prompt'])
                 score,nsfw_prob = self.aesthetic_model.get_aes_and_nsfw(generated_image)
                 if nsfw_prob > 0.6:
                     nsfw = True 
@@ -155,7 +144,7 @@ class Inference(Worker):
                 ret = {
                     "type": "text2image",
                     "img_path" : generated_img_path,
-                    "gen_id": preprocess_data['gen_id'],
+                    "gen_id": image_generation_data['gen_id'],
                     "nsfw": nsfw,
                     "score": score,
                     "face":has_face
@@ -204,7 +193,7 @@ class Postprocess(Worker):
 
     def forward(self, inference_data):
         match inference_data["type"]:
-            case "text2image" :
+            case "text2image"  | "image2image" :
                 img_path = inference_data["img_path"]
                 
                 if img_path == "Error":
@@ -224,7 +213,6 @@ class Postprocess(Worker):
                         "nsfw":inference_data['nsfw'],
                         "face":inference_data['face']
                     }
-                    print(ret)
                     return ret 
             case "upscale":
                 img_path = inference_data["img_path"]
