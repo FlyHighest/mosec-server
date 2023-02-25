@@ -129,10 +129,13 @@ class Inference(Worker):
                 
                 # 文生图
                 if preprocess_data["type"]=="text2image":
+                    print("t2i task")
                     generated_img_path, generated_image = self.image_gen_model.text2image(image_generation_data )
                 elif image_generation_data['i2i_model']=="原模型":
+                    print("i2i task")
                     generated_img_path, generated_image = self.image_gen_model.image2image(image_generation_data )
                 elif image_generation_data['i2i_model'].startswith("ControlNet"):
+                    print("i2i task controlnet")
                     generated_img_path, generated_image = self.image_gen_model.image2image_controlnet(image_generation_data )
 
 
