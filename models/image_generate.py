@@ -180,4 +180,5 @@ class ImageGenerationModel:
         except:
             traceback.print_exc()
             print("Error while generating with model "+model_name)
+            print(json_data)
             return "Error",None
