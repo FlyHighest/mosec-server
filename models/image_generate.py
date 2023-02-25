@@ -118,7 +118,7 @@ class ImageGenerationModel:
                 "restore_faces" : True,
                 "negative_prompt" : params["negative_prompt"],
                 "images":[params["image"]],
-                "denoising_strength": 1 - params["i2i_guidance_strength"],
+                "denoising_strength": 1 - float(params["i2i_guidance_strength"]),
                 "initial_noise_multiplier": 1.0,
             }
             model_name = params["model_name"]
