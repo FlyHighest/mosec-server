@@ -132,7 +132,7 @@ class Inference(Worker):
                     generated_img_path, generated_image = self.image_gen_model.text2image(image_generation_data )
                 elif image_generation_data['i2i_model']=="原模型":
                     generated_img_path, generated_image = self.image_gen_model.image2image(image_generation_data )
-                else:
+                elif image_generation_data['i2i_model'].startswith("ControlNet"):
                     generated_img_path, generated_image = self.image_gen_model.image2image_controlnet(image_generation_data )
 
 
