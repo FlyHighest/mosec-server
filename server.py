@@ -63,9 +63,11 @@ class Preprocess(Worker):
                     image_gen_id = data['gen_id']
                     if 'extra_model_name' in data and data['extra_model_name'] in EXTRA_MODEL_LORA:
                         data['prompt'] += EXTRA_MODEL_LORA[data['extra_model_name']]
+                        del data['extra_model_name']
                     del data['model_name']
                     del data['type']
                     del data['gen_id']
+                    
 
                     ret = {
                                 "type": "text2image",

@@ -93,10 +93,11 @@ class Text2ImageModel:
                 "restore_faces" : True,
                 "negative_prompt" : pipeline_params["negative_prompt"]   
             }
+            extra_options = {}
             if model_name=="ACertainThing":
-                self.api.set_options({"CLIP_stop_at_last_layers":2})
-            else:
-                self.api.set_options({"CLIP_stop_at_last_layers":1})
+                extra_options = {
+                     "override_settings":{"CLIP_stop_at_last_layers":2}
+                }
             if model_name=="YunJingAnime-v1":
                 extra_options = {
                      "width": int(json_data['width']/2),
@@ -105,9 +106,16 @@ class Text2ImageModel:
                      "hr_scale":  2,
                      "hr_upscaler": webuiapi.HiResUpscaler.Latent,
                      "hr_second_pass_steps": 20,
-                     "denoising_strength":0.6
+                     "denoising_strength":0.6,
+                     "override_settings":{'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors'}
                 }
-                json_data.update(extra_options)
+            if model_name=="Counterfeit-V2.5":
+                extra_options = {
+                     "override_settings":{'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors'}
+                }
+                
+            json_data.update(extra_options)
+            if model_name=
             self.api.util_set_model(model_name)
             result = self.api.txt2img(**json_data)
             # print(json_data)
