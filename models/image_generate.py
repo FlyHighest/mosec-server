@@ -22,11 +22,6 @@ class ImageGenerationModel:
                      "override_settings":{"CLIP_stop_at_last_layers":2}
                 }
         self.extra_options["YunJingAnime-v1"]= {
-                     "enable_hr": True,
-                     "hr_scale":  2,
-                     "hr_upscaler": webuiapi.HiResUpscaler.Latent,
-                     "hr_second_pass_steps": 20,
-                     "denoising_strength":0.6,
                      "override_settings":{'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors'}
                 }
         self.extra_options["Counterfeit-V2.5"]={ 
@@ -50,13 +45,14 @@ class ImageGenerationModel:
                 "restore_faces" : True,
                 "negative_prompt" : params["negative_prompt"],
                 "images":[params["image"]],
-                "denoising_strength":params["i2i_denoising_strength"]
+                "denoising_strength":params["i2i_denoising_strength"],
+                "initial_noise_multiplier": 1.0,
             }
             model_name = params["model_name"]
             
             if model_name=="YunJingAnime-v1":
-                json_data["width"]= int(json_data['width'])//2,
-                json_data["height"]= int(json_data['height'])//2,
+                json_data["width"]= int(json_data['width']//2)
+                json_data["height"]= int(json_data['height']//2)
                 
                 
             json_data.update(self.extra_options[model_name])
@@ -92,8 +88,16 @@ class ImageGenerationModel:
             extra_options = {}
             
             if model_name=="YunJingAnime-v1":
-                json_data["width"]= int(json_data['width'])//2,
-                json_data["height"]= int(json_data['height'])//2,
+                json_data["width"]= int(json_data['width']//2)
+                json_data["height"]= int(json_data['height']//2)
+                json_data.update({
+                     "enable_hr": True,
+                     "hr_scale":  2,
+                     "hr_upscaler": webuiapi.HiResUpscaler.Latent,
+                     "hr_second_pass_steps": 20,
+                     "denoising_strength":0.6
+                })
+                
                 
                 
             json_data.update(self.extra_options[model_name])
