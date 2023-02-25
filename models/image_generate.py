@@ -37,7 +37,7 @@ class ImageGenerationModel:
             "人体姿态估计":"openpose",
             "语义分割":"segmentation",
             "深度估计":"depth",
-            "法线贴图估计":"normal"
+            "法线贴图估计":"normal_map"
         }
         self.i2i_model_map = {
             "原模型":"None",
