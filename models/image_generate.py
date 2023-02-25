@@ -92,8 +92,9 @@ class ImageGenerationModel:
 
             self.api.util_set_model(model_name)
 
+            print(json_data)
             result = self.cn.txt2img(**json_data)
-            # print(json_data)
+            
             image = result.image
             image.save(self.output_name, format='jpeg', quality=90)
             return self.output_name, image
