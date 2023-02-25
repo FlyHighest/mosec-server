@@ -61,7 +61,7 @@ class ImageGenerationModel:
             json_data = {
                 "prompt" : params["prompt"],
                 "seed" : params["seed"],
-                "sampler_name" : params["scheduler_name"],
+                "sampler_index" : params["scheduler_name"],
                 "steps" : params["num_inference_steps"],
                 "cfg_scale" : params["guidance_scale"],
                 "width" : params["width"],
