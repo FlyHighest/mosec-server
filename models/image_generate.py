@@ -72,7 +72,8 @@ class ImageGenerationModel:
                 "controlnet_input_image":[params["image"]],
                 "controlnet_weight":params["i2i_guidance_strength"],
                 "controlnet_module": self.i2i_preprocess_map[params['i2i_preprocess']],
-                "controlnet_model": self.i2i_model_map[params['i2i_model']]
+                "controlnet_model": self.i2i_model_map[params['i2i_model']],
+                "guess_mode":False
             }
             model_name = params["model_name"]
     
