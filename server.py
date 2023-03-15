@@ -245,6 +245,8 @@ class Postprocess(Worker):
                 }
 
 if __name__ == "__main__":
+    import os 
+    os.environ['TRANSFORMERS_CACHE'] = "/root/mosec-server/models-cache"
     from gpuinfo import GPUInfo
     num_gpus = len(GPUInfo.gpu_usage()[0])
     print("num gpus ",num_gpus)

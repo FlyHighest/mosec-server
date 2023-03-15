@@ -27,7 +27,7 @@ def load_safety_model():
 class AestheticSafetyModel:
     def __init__(self,device) -> None:
         self.device = device 
-        self.clip_model,self.clip_preprocess = clip.load("ViT-L/14",device=device)
+        self.clip_model,self.clip_preprocess = clip.load("ViT-L/14",device=device,download_root="models-cache")
 
         self.aesthetic_model = get_aesthetic_model()
         self.aesthetic_model.to(device)
