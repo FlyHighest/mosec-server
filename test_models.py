@@ -35,6 +35,8 @@ class PromptGenAutomaticLexart:
         return texts
 
 if __name__=="__main__":
+    os.environ['TRANSFORMERS_CACHE'] = "/root/mosec-server/models-cache"
+
     prompt_gen = PromptGenAutomaticLexart(torch.device("cuda"))
     results= prompt_gen("McDonald's Church,")
     print(results)
