@@ -8,6 +8,7 @@ class PromptGenAutomaticLexart:
         self.tokenizer = AutoTokenizer.from_pretrained("AUTOMATIC/promptgen-lexart")
         self.model = AutoModelForCausalLM.from_pretrained("AUTOMATIC/promptgen-lexart")
         self.device=device or torch.device("cuda")
+        self.model.to(self.device)
     
     def __call__(self, starting_text,batch_size=1):
         input_ids = self.tokenizer(starting_text, return_tensors="pt").input_ids
