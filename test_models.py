@@ -2,6 +2,11 @@ import os
 import torch
 
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import pipeline
+class PromptGenExtend:
+    def __init__(self,device=None) -> None:
+        
+        self.pipe = pipeline('text-generation', model='daspartho/prompt-extend')
 
 class PromptGenAutomaticLexart:
     def __init__(self,device=None) -> None:    

@@ -1,19 +1,64 @@
 import sys 
 sys.path.append(".")
 import httpx
-from params.secret import upload_url,upload_key
-import os 
+from params.secret import upload_url,upload_key, tencentcloud_secret_id, tencentcloud_secret_key
+import nanoid
 import traceback
 import json 
+import os 
+
+from qcloud_cos import CosConfig
+from qcloud_cos import CosS3Client
+
+
+# 1. 设置用户属性, 包括 secret_id, secret_key, region 等。Appid 已在 CosConfig 中移除，请在参数 Bucket 中带上 Appid。Bucket 由 BucketName-Appid 组成
 
 class StorageTool:
     def __init__(self) -> None:
         self.header = {
                 "X-API-Key":upload_key
         }
+        region = None              # 通过自定义域名初始化不需要配置 region
+        token = None               # 如果使用永久密钥不需要填入 token，如果使用临时密钥需要填入，临时密钥生成和使用指引参见 https://cloud.tencent.com/document/product/436/14048
+        scheme = 'https'           # 指定使用 http/https 协议来访问 COS，默认为 https，可不填
+
+        domain = 'images.dong-liu.com' # 用户自定义域名，需要先开启桶的自定义域名，具体请参见 https://cloud.tencent.com/document/product/436/36638
+        config = CosConfig(Region=region, SecretId=tencentcloud_secret_id, SecretKey=tencentcloud_secret_key, Token=token, Domain=domain, Scheme=scheme)
+        self.client = CosS3Client(config)
+        self.alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789'
+        self.tencent_url = "https://images.dong-liu.com/"
         
   
-    def upload(self, img_path,expire=None):
+    def upload(self, img_path,expire=None,userid=None):
+        if userid is None:
+            self.upload_self(img_path,expire)
+        else:
+            self.upload_tencent(img_path,userid)
+        
+    def upload_tencent(self,img_path,userid):
+        response = None
+        if os.path.exists(img_path.replace(".jpeg",".webp")):
+            img_path = img_path.replace(".jpeg",".webp")
+            
+        key = f'{userid}/{nanoid.generate(self.alphabet,8)}.webp'
+        for i in range(0, 10):
+            try:
+                
+                response = self.client.upload_file(
+                    Bucket='yunjing-images-1256692038',
+                    Key=key,
+                    LocalFilePath=img_path
+                )
+                response["image_url"] = self.tencent_url+key
+                break
+            except:
+                continue
+        if response is None:
+            return ""
+        else:
+            return response["image_url"]
+
+    def upload_self(self,img_path,expire=None):
         try:
             payload = {
                 'format': 'json',

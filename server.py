@@ -146,13 +146,19 @@ class Inference(Worker):
                 else:
                     nsfw = False
                 has_face = self.face_detector.detect(generated_image)
+
+                if 'userid' in image_generation_data:
+                    userid = image_generation_data['userid']
+                else:
+                    userid = None
                 ret = {
                     "type": "text2image",
                     "img_path" : generated_img_path,
                     "gen_id": image_generation_data['gen_id'],
                     "nsfw": nsfw,
                     "score": score,
-                    "face":has_face
+                    "face":has_face,
+                    "userid": userid
                 }
 
                 
@@ -200,7 +206,7 @@ class Postprocess(Worker):
         match inference_data["type"]:
             case "text2image"  | "image2image" :
                 img_path = inference_data["img_path"]
-                
+                userid = inference_data['userid']
                 if img_path == "Error":
                     return {
                         "img_url": "Error",
@@ -211,7 +217,7 @@ class Postprocess(Worker):
                         expire = "PT5M"
                     else:
                         expire = None
-                    img_url = self.storage_tool.upload(img_path,expire)
+                    img_url = self.storage_tool.upload(img_path,expire,userid)
                     ret = {
                         "img_url": img_url,
                         "score":inference_data['score'],

@@ -1,10 +1,9 @@
-qiniu
 nanoid
 torch
 diffusers
-lingua-language-detector
 mosec
 transformers
 clip
 autokeras
 facenet_pytorch
+cos-python-sdk-v5
