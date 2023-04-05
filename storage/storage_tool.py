@@ -31,9 +31,9 @@ class StorageTool:
   
     def upload(self, img_path,expire=None,userid=None):
         if userid is None:
-            self.upload_self(img_path,expire)
+            return self.upload_self(img_path,expire)
         else:
-            self.upload_tencent(img_path,userid)
+            return self.upload_tencent(img_path,userid)
         
     def upload_tencent(self,img_path,userid):
         response = None
