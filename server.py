@@ -215,9 +215,10 @@ class Postprocess(Worker):
                 else: 
                     if inference_data['nsfw']:
                         expire = "PT5M"
+                        img_url = ""
                     else:
                         expire = None
-                    img_url = self.storage_tool.upload(img_path,expire,userid)
+                        img_url = self.storage_tool.upload(img_path,expire,userid)
                     ret = {
                         "img_url": img_url,
                         "score":inference_data['score'],
@@ -233,7 +234,7 @@ class Postprocess(Worker):
                         "img_url": "Error",
                     }
                 else: 
-                    img_url = self.storage_tool.upload(img_path,expire="PT5M")
+                    img_url = self.storage_tool.upload(img_path,expire="PT5M",userid="tmp")
                     return {
                         "img_url": img_url
                     }
