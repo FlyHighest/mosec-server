@@ -140,12 +140,14 @@ class Inference(Worker):
 
 
                 
-                score,nsfw_prob = self.aesthetic_model.get_aes_and_nsfw(generated_image)
-                if nsfw_prob > 0.6:
-                    nsfw = True 
-                else:
-                    nsfw = False
+                # score,nsfw_prob = self.aesthetic_model.get_aes_and_nsfw(generated_image)
+                # if nsfw_prob > 0.6:
+                #     nsfw = True 
+                # else:
+                #     nsfw = False
+                score, nsfw, face = self.aesthetic_model.get_aes_nsfw_and_face(generated_image)
                 has_face = self.face_detector.detect(generated_image)
+                print(face==has_face)
 
                 if 'userid' in image_generation_data:
                     userid = image_generation_data['userid']

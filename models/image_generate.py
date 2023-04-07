@@ -135,6 +135,7 @@ class ImageGenerationModel:
             # print(json_data)
             image = result.image
             image.save(self.output_name, format='jpeg', quality=90)
+            image.save(self.output_name_webp,format="webp",quality=90)
             return self.output_name, image
 
         except:

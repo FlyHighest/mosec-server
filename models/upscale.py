@@ -11,14 +11,14 @@ class UpscaleModel:
         self.model.load_weights('models-cache/RealESRGAN_x2.pth', download=True)
 
         self.worker_id = worker_id
-        self.output_name = f"/tmp/output_ups_id{self.worker_id}.jpeg"
+        self.output_name = f"/tmp/output_ups_id{self.worker_id}.webp"
 
     def __call__(self, img) -> str:
         try:
             with torch.inference_mode():
                 sr_image = self.model.predict(img)
 
-            sr_image.save(self.output_name, format='jpeg', quality=90)
+            sr_image.save(self.output_name, format='webp', quality=90)
             return self.output_name
         except:
             traceback.print_exc()
