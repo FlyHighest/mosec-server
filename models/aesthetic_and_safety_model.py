@@ -55,7 +55,7 @@ def check(image, type, user_id):
     params = {
         "type": type,
         "strategyId":"001",
-        "userId": user_id,
+        "userId": str(user_id),
         "image": image
     }
     query_body = json.dumps(params)

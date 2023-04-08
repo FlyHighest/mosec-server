@@ -86,7 +86,7 @@ class ImageGenerationModel:
             }
             model_name = params["model_name"]
     
-            if model_name=="YunJingAnime-v1":
+            if params["hiresfix"]=="On":
                 json_data["width"]= int(json_data['width']//2)
                 json_data["height"]= int(json_data['height']//2)
                 json_data.update({
@@ -167,7 +167,7 @@ class ImageGenerationModel:
             }
             model_name = params["model_name"]
             
-            if model_name=="YunJingAnime-v1":
+            if params["hiresfix"]=="On":
                 json_data["width"]= int(json_data['width']//2)
                 json_data["height"]= int(json_data['height']//2)
                 json_data.update({

@@ -29,11 +29,8 @@ class StorageTool:
         self.tencent_url = "https://images.dong-liu.com/"
         
   
-    def upload(self, img_path,expire=None,userid=None):
-        if userid is None:
-            return self.upload_self(img_path,expire)
-        else:
-            return self.upload_tencent(img_path,userid)
+    def upload(self, img_path,userid=None):
+        return self.upload_tencent(img_path,userid)
         
     def upload_tencent(self,img_path,userid):
         response = None

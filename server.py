@@ -44,9 +44,7 @@ class Preprocess(Worker):
                     data['prompt'] = self.prompt_format(data['prompt'])
                     data['negative_prompt'] = self.prompt_format(data['negative_prompt'])
                     
-                    if 'extra_model_name' in data and data['extra_model_name'] in EXTRA_MODEL_LORA:
-                        data['prompt'] += EXTRA_MODEL_LORA[data['extra_model_name']]
-                       
+                    
                     if data['model_name']=="OpenJourney" and not data['prompt'].startswith("mdjrny-v4 style"):
                         data['prompt'] = "mdjrny-v4 style, " + data['prompt']
 
@@ -137,22 +135,16 @@ class Inference(Worker):
                 elif image_generation_data['i2i_model'].startswith("ControlNet"):
                     print("i2i task controlnet")
                     generated_img_path, generated_image = self.image_gen_model.image2image_controlnet(image_generation_data )
-
-
-                
-                # score,nsfw_prob = self.aesthetic_model.get_aes_and_nsfw(generated_image)
-                # if nsfw_prob > 0.6:
-                #     nsfw = True 
-                # else:
-                #     nsfw = False
-                score, nsfw, face = self.aesthetic_model.get_aes_nsfw_and_face(generated_image)
-                has_face = self.face_detector.detect(generated_image)
-                print(face==has_face)
-
+                    
                 if 'userid' in image_generation_data:
                     userid = image_generation_data['userid']
                 else:
-                    userid = None
+                    userid = "Default"
+                    
+                score, nsfw, has_face = self.aesthetic_model.get_aes_nsfw_and_face(generated_image,userid)
+                #has_face = self.face_detector.detect(generated_image)
+
+
                 ret = {
                     "type": "text2image",
                     "img_path" : generated_img_path,
@@ -216,11 +208,9 @@ class Postprocess(Worker):
                 
                 else: 
                     if inference_data['nsfw']:
-                        expire = "PT5M"
                         img_url = ""
                     else:
-                        expire = None
-                        img_url = self.storage_tool.upload(img_path,expire,userid)
+                        img_url = self.storage_tool.upload(img_path,userid)
                     ret = {
                         "img_url": img_url,
                         "score":inference_data['score'],
@@ -236,7 +226,7 @@ class Postprocess(Worker):
                         "img_url": "Error",
                     }
                 else: 
-                    img_url = self.storage_tool.upload(img_path,expire="PT5M",userid="tmp")
+                    img_url = self.storage_tool.upload(img_path,userid="tmp")
                     return {
                         "img_url": img_url
                     }
