@@ -22,11 +22,19 @@ class ImageGenerationModel:
         self.extra_options["ACertainThing"]= {
                      "override_settings":{"CLIP_stop_at_last_layers":2}
                 }
+        self.extra_options["MeinaMix"]= {
+                     "override_settings":{"CLIP_stop_at_last_layers":2}
+                }
+        self.extra_options["DreamShaper"] = {
+                     "override_settings":{"CLIP_stop_at_last_layers":2}
+                }
         self.extra_options["YunJingAnime-v1"]= {
-                     "override_settings":{'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors'}
+                     "override_settings":{'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors',
+                                         "CLIP_stop_at_last_layers":2}
                 }
         self.extra_options["Counterfeit-V2.5"]={ 
-            "override_settings":{'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors'}
+            "override_settings":{'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors',
+                                "CLIP_stop_at_last_layers":2}
                 }
         
         self.i2i_preprocess_map = {
@@ -67,7 +75,7 @@ class ImageGenerationModel:
                 "cfg_scale" : params["guidance_scale"],
                 "width" : params["width"],
                 "height" : params["height"],
-                "restore_faces" : True,
+                "restore_faces" : False,
                 "negative_prompt" : params["negative_prompt"],
 
                 "controlnet_input_image":[params["image"]],
