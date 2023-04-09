@@ -41,9 +41,8 @@ def img2base64(img):
         image = Image.open(img)
     else:
         image = img
-    image = image.resize((256,256))
     byte_data = BytesIO()# 创建一个字节流管道
-    image.save(byte_data, format="JPEG")# 将图片数据存入字节流管道
+    image.save(byte_data, format="webp")# 将图片数据存入字节流管道
     byte_data = byte_data.getvalue()# 从字节流管道中获取二进制
     base64_str = base64.b64encode(byte_data).decode("ascii")# 二进制转base64
     return base64_str
@@ -120,9 +119,11 @@ class AestheticSafetyModel:
         image_base64 = img2base64(image) 
         response = check(image_base64, 2, userid)
         res = json.loads(response)
-        nsfw = True if int(res['result'])==2 else False
+        nsfw_res = int(res['result'])
+        
+        # nsfw = True if int(res['result'])==2 else False
         face = True if int(res['extraInfo']['numFace'])>0 else False
-        return score, nsfw, face
+        return score, nsfw_res, face
 
 if __name__=="__main__":
     from PIL import Image 

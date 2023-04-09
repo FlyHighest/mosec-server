@@ -70,13 +70,6 @@ class Preprocess(Worker):
                         "type": "enhanceprompt",
                         "starting_text": data["starting_text"]
                     }
-                case "safety_check":
-                    img_bytes = httpx.get(data['img_url']).content
-                    img = Image.open(BytesIO(img_bytes)).convert("RGB")
-                    ret = {
-                        "type":"safety_check",
-                        "img": img
-                    }
                 case "face_detect":
                     img_bytes = httpx.get(data['img_url']).content
                     img = Image.open(BytesIO(img_bytes)).convert("RGB")
@@ -141,7 +134,7 @@ class Inference(Worker):
                 else:
                     userid = "Default"
                     
-                score, nsfw, has_face = self.aesthetic_model.get_aes_nsfw_and_face(generated_image,userid)
+                score, nsfw_res, has_face = self.aesthetic_model.get_aes_nsfw_and_face(generated_image,userid)
                 #has_face = self.face_detector.detect(generated_image)
 
 
@@ -149,7 +142,7 @@ class Inference(Worker):
                     "type": "text2image",
                     "img_path" : generated_img_path,
                     "gen_id": image_generation_data['gen_id'],
-                    "nsfw": nsfw,
+                    "nsfw": nsfw_res,
                     "score": score,
                     "face":has_face,
                     "userid": userid
@@ -169,16 +162,6 @@ class Inference(Worker):
                 ret = {
                     "type": "enhanceprompt",
                     "enhanced_text": enhanced
-                }
-            case "safety_check":
-                score,nsfw_prob = self.aesthetic_model.get_aes_and_nsfw(preprocess_data['img'])
-                if nsfw_prob > 0.6:
-                    nsfw = True 
-                else:
-                    nsfw = False
-                ret = {
-                    "type" : "safety_check",
-                    "result" : "NSFW" if nsfw else "OK"
                 }
             case "face_detect":
                 has_face = self.face_detector.detect(preprocess_data['img'])
@@ -207,10 +190,18 @@ class Postprocess(Worker):
                     }
                 
                 else: 
-                    if inference_data['nsfw']:
+                    if inference_data['nsfw']==2:
                         img_url = ""
+                        nsfw = True
+                    elif inference_data['nsfw']==1:
+                        img_url = self.storage_tool.upload(img_path,"tmp")
+                        nsfw = self.storage_tool.tencent_check_nsfw(img_url)
+                        if not nsfw:
+                            img_url = self.storage_tool.tencent_copy(img_url,userid)
                     else:
+                        nsfw = False
                         img_url = self.storage_tool.upload(img_path,userid)
+                        
                     ret = {
                         "img_url": img_url,
                         "score":inference_data['score'],
@@ -233,10 +224,6 @@ class Postprocess(Worker):
             case "enhanceprompt":
                 return {
                     "enhanced_text": inference_data["enhanced_text"]
-                }
-            case "safety_check":
-                return {
-                    "result": inference_data["result"]
                 }
             case "face_detect":
                 return {

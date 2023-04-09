@@ -20,7 +20,8 @@ class ImageGenerationModel:
 
         self.extra_options = defaultdict(dict)
         self.extra_options["ACertainThing"]= {
-                     "override_settings":{"CLIP_stop_at_last_layers":2}
+                     "override_settings":{"CLIP_stop_at_last_layers":2,
+                                          'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors'}
                 }
         self.extra_options["MeinaMix"]= {
                      "override_settings":{"CLIP_stop_at_last_layers":2}
