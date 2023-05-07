@@ -100,7 +100,7 @@ class Inference(Worker):
 
         # prepare models
         self.image_gen_model = ImageGenerationModel(worker_id)
-        self.upscale_model = UpscaleModel(self.device, worker_id)
+        # self.upscale_model = UpscaleModel(self.device, worker_id)
         self.prompt_enh_model = MagicPrompt(self.device)
         self.translator = Translator(self.device)
         self.aesthetic_model = AestheticSafetyModel(self.device)
@@ -153,7 +153,7 @@ class Inference(Worker):
                 del preprocess_data["type"]
                 ret = {
                     "type":"upscale", 
-                    "img_path" : self.upscale_model(**preprocess_data)
+                    "img_path" : None # self.upscale_model(**preprocess_data)
                 }
             case "enhanceprompt":
                 starting_text = preprocess_data["starting_text"]
@@ -194,7 +194,7 @@ class Postprocess(Worker):
                         img_url = ""
                         nsfw = True
                     elif inference_data['nsfw']==1:
-                        img_url = self.storage_tool.upload(img_path,"tmp")
+                        img_url = self.storage_tool.upload(img_path,"tmp_check")
                         nsfw = self.storage_tool.tencent_check_nsfw(img_url)
                         if not nsfw:
                             img_url = self.storage_tool.tencent_copy(img_url,userid)
@@ -205,12 +205,12 @@ class Postprocess(Worker):
                     ret = {
                         "img_url": img_url,
                         "score":inference_data['score'],
-                        "nsfw":inference_data['nsfw'],
+                        "nsfw":nsfw,
                         "face":inference_data['face']
                     }
                     return ret 
             case "upscale":
-                img_path = inference_data["img_path"]
+                img_path = "Error" #inference_data["img_path"]
                 
                 if img_path == "Error":
                     return {

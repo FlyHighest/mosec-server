@@ -49,7 +49,8 @@ class StorageTool:
                 response = self.client.upload_file(
                     Bucket='yunjing-images-1256692038',
                     Key=key,
-                    LocalFilePath=img_path
+                    LocalFilePath=img_path,
+                    ContentDisposition="attachment"
                 )
                 response["image_url"] = self.tencent_url+key
                 break
