@@ -121,7 +121,6 @@ class AestheticSafetyModel:
         res = json.loads(response)
         nsfw_res = int(res['result'])
         
-        # nsfw = True if int(res['result'])==2 else False
         face = True if int(res['extraInfo']['numFace'])>0 else False
         return score, nsfw_res, face
 

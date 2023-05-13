@@ -70,13 +70,7 @@ class Preprocess(Worker):
                         "type": "enhanceprompt",
                         "starting_text": data["starting_text"]
                     }
-                case "face_detect":
-                    img_bytes = httpx.get(data['img_url']).content
-                    img = Image.open(BytesIO(img_bytes)).convert("RGB")
-                    ret = {
-                        "type":"face_detect",
-                        "img": img
-                    }
+
 
         except KeyError as err:
             raise ValidationError(f"cannot find key {err}") from err
@@ -104,7 +98,6 @@ class Inference(Worker):
         self.prompt_enh_model = MagicPrompt(self.device)
         self.translator = Translator(self.device)
         self.aesthetic_model = AestheticSafetyModel(self.device)
-        self.face_detector = FaceDetector(self.device)
         
     def forward(self, preprocess_data: dict):
         match preprocess_data["type"]:
@@ -135,7 +128,6 @@ class Inference(Worker):
                     userid = "Default"
                     
                 score, nsfw_res, has_face = self.aesthetic_model.get_aes_nsfw_and_face(generated_image,userid)
-                #has_face = self.face_detector.detect(generated_image)
 
 
                 ret = {
@@ -163,12 +155,7 @@ class Inference(Worker):
                     "type": "enhanceprompt",
                     "enhanced_text": enhanced
                 }
-            case "face_detect":
-                has_face = self.face_detector.detect(preprocess_data['img'])
-                ret = {
-                    "type":"face_detec",
-                    "face":has_face
-                }
+
         return ret
 
 
@@ -225,10 +212,7 @@ class Postprocess(Worker):
                 return {
                     "enhanced_text": inference_data["enhanced_text"]
                 }
-            case "face_detect":
-                return {
-                    "face":inference_data["face"]
-                }
+
 
 if __name__ == "__main__":
     import os 
