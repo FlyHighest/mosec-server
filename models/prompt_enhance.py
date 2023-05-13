@@ -19,7 +19,7 @@ class PromptEnhancer:
     def promptist_generate(self, plain_text):
         input_ids = self.promptist_tokenizer(plain_text.strip()+" Rephrase:", return_tensors="pt").input_ids
         eos_id = self.promptist_tokenizer.eos_token_id
-        outputs = self.promptist_model.generate(input_ids, do_sample=False, max_new_tokens=75, num_beams=8, num_return_sequences=8, eos_token_id=eos_id, pad_token_id=eos_id, length_penalty=-1.0)
+        outputs = self.promptist_model.generate(input_ids, do_sample=False, max_new_tokens=75, num_beams=8, num_return_sequences=1, eos_token_id=eos_id, pad_token_id=eos_id, length_penalty=-1.0)
         output_texts = self.promptist_tokenizer.batch_decode(outputs, skip_special_tokens=True)
         res = output_texts[0].replace(plain_text+" Rephrase:", "").strip()
         return res
