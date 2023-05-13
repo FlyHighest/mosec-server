@@ -55,7 +55,9 @@ class StorageTool:
         if response is None:
             return ""
         else:
-            return response["Location"]
+            return client.get_object_url(
+                        Bucket='yunjing-images-1256692038',
+                        Key=key)
            
 
     @staticmethod
