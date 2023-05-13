@@ -225,8 +225,8 @@ if __name__ == "__main__":
     num_gpus = len(GPUInfo.gpu_usage()[0])
     print("num gpus ",num_gpus)
     server = Server()
-    server.append_worker(Preprocess, num=4)
+    server.append_worker(Preprocess, num=2)
     server.append_worker(Inference, num=num_gpus,
                          max_batch_size=INFERENCE_BATCH_SIZE)
-    server.append_worker(Postprocess, num=4)
+    server.append_worker(Postprocess, num=2)
     server.run()
