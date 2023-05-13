@@ -48,11 +48,11 @@ class Preprocess(Worker):
                     data['prompt'] = self.prompt_format(data['prompt'])
                     data['negative_prompt'] = self.prompt_format(data['negative_prompt'])
                     data['prompt'], data['negative_prompt'] = \
-                    self.translator.prompt_handle(
-                        data['prompt'], 
-                        data['negative_prompt'] 
-                    )
-                
+                        self.translator.prompt_handle(
+                            data['prompt'], 
+                            data['negative_prompt'] 
+                        )
+                    
                     if data['model_name']=="OpenJourney" and not data['prompt'].startswith("mdjrny-v4 style"):
                         data['prompt'] = "mdjrny-v4 style, " + data['prompt']
 
@@ -75,7 +75,7 @@ class Preprocess(Worker):
                     }
 
                 case "enhanceprompt":
-                    starting_text =  data["starting_text"]
+                    starting_text = self.translator.translate_chinese( data["starting_text"] )
                     model_type = data["model_type"]
                     result_text = self.prompt_enh_model(starting_text,model_type)
                     raise ValidationError(result_text) # suggested by mosec maintainer: https://github.com/mosecorg/mosec/discussions/349
