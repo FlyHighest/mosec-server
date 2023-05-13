@@ -1,18 +1,38 @@
-from lingua import Language
-from transformers import pipeline
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-import math ,torch
+import sys 
+sys.path.append(".")
 import re 
+from params.secret import tencentcloud_secret_id,tencentcloud_secret_key
+import json
+from tencentcloud.common import credential
+from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
+from tencentcloud.tmt.v20180321 import tmt_client, models
 
-LANG_TO_FLORES = {
-    "CHINESE": "zho_Hans",
-    "ENGLISH": "eng_Latn"
-}
-TRANSLATOR_MODEL_ID = "Helsinki-NLP/opus-mt-zh-en"
+def tencent_machine_translate(chinese_list):
+    try:
+        cred = credential.Credential(tencentcloud_secret_id, tencentcloud_secret_key)
 
-target_lang_score_max = 0.9
-target_lang = Language.ENGLISH
-target_lang_flores = LANG_TO_FLORES[target_lang.name]
+        client = tmt_client.TmtClient(cred, "ap-shanghai")
+
+        # 实例化一个请求对象,每个接口都会对应一个request对象
+        req = models.TextTranslateBatchRequest()
+        params = {
+            "Source": "zh",
+            "Target": "en",
+            "ProjectId": 0,
+            "SourceTextList": chinese_list
+        }
+        req.from_json_string(json.dumps(params))
+
+        # 返回的resp是一个TextTranslateBatchResponse的实例，与请求对象对应
+        resp = client.TextTranslateBatch(req)
+        # 输出json格式的字符串回包
+        result = json.loads(resp.to_json_string())
+        return result["TargetTextList"]
+    
+    except TencentCloudSDKException as err:
+        print(err)
+        return chinese_list
+
 
 def get_chinese(input_str):
     pattern = re.compile(r'[\u4e00-\u9fa5]+')
@@ -41,18 +61,8 @@ def replace_substrings(string, start_list,end_list, replacement_list):
 
 class Translator:
     # other languages to english 
-    def __init__(self,device) -> None:
-        self.device = device
-        self.translate_tokenizer = AutoTokenizer.from_pretrained(TRANSLATOR_MODEL_ID)
-        self.translate_model = AutoModelForSeq2SeqLM.from_pretrained(TRANSLATOR_MODEL_ID)
-        self.translate_pipeline = pipeline(
-                'translation',
-                model=self.translate_model,
-                tokenizer=self.translate_tokenizer,
-                torch_dtype=torch.float16,
-                device=self.device
-            )
-        self.target_flores = target_lang_flores
+    def __init__(self) -> None:
+        pass 
     
     def prompt_handle(self,prompt,negative_prompt):
         return self.translate_chinese(prompt),self.translate_chinese(negative_prompt)
@@ -61,27 +71,13 @@ class Translator:
         chinese_list, start_list,end_list = get_chinese(prompt)
         if len(chinese_list)==0:
             return prompt
-        chinese_to_english_list = self.translate_chinese_list(chinese_list)
+        chinese_to_english_list = tencent_machine_translate(chinese_list)
         prompt = replace_substrings(prompt,start_list,end_list,chinese_to_english_list)
         return prompt
 
     
-    def translate_chinese_list(self, string_list):
-        translate_output = self.translate_pipeline(string_list)
-        res = []
-        for i in translate_output:
-            res.append(i['translation_text'].replace(".",""))
-        return res 
-
-    
 
 if __name__=="__main__":
-    t = Translator(torch.device("cuda:0"))
-
-    import time 
-
-    s = time.time()
-    p = "masterpiece,我爱北京，我爱中国,best quality, 你是聪明人，jpeg artifact，我要画画"
-    np = "坏掉的手部，多余的四肢，bad quality"
-    print(t.prompt_handle(p,np))
-    print(time.time()-s)
+    
+    chinese_list = ["坏掉的手部","多余的四肢","获奖摄影"]
+    tencent_machine_translate(chinese_list)

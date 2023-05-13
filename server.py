@@ -1,3 +1,6 @@
+import os 
+os.environ['TRANSFORMERS_CACHE'] = "/root/mosec-server/models-cache"
+os.environ['HF_HOME'] = "/root/mosec-server/models-cache"
 import logging
 from io import BytesIO
 from PIL import Image
@@ -6,9 +9,10 @@ import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
-from models import ImageGenerationModel,UpscaleModel,MagicPrompt,Translator,AestheticSafetyModel,FaceDetector
+from models import ImageGenerationModel,UpscaleModel,MagicPrompt,Translator,AestheticSafetyModel
 from storage.storage_tool import StorageTool
 from params.constants import EXTRA_MODEL_LORA
+
 logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
 formatter = logging.Formatter(
@@ -18,14 +22,13 @@ sh = logging.StreamHandler()
 sh.setFormatter(formatter)
 logger.addHandler(sh)
 
-INFERENCE_BATCH_SIZE = 1
-
 
 class Preprocess(Worker):
     """Sample Preprocess worker"""
 
     def __init__(self) -> None:
         super().__init__()
+        self.translator = Translator()
 
     def prompt_format(self, prompt_str):
         prompt_str = re.sub(r"[\u3000-\u303F\uFF00-\uFFEF]",",",prompt_str)
@@ -43,8 +46,12 @@ class Preprocess(Worker):
                     # prompt preprocess
                     data['prompt'] = self.prompt_format(data['prompt'])
                     data['negative_prompt'] = self.prompt_format(data['negative_prompt'])
-                    
-                    
+                    data['prompt'], data['negative_prompt'] = \
+                    self.translator.prompt_handle(
+                        data['prompt'], 
+                        data['negative_prompt'] 
+                    )
+                
                     if data['model_name']=="OpenJourney" and not data['prompt'].startswith("mdjrny-v4 style"):
                         data['prompt'] = "mdjrny-v4 style, " + data['prompt']
 
@@ -96,21 +103,14 @@ class Inference(Worker):
         self.image_gen_model = ImageGenerationModel(worker_id)
         # self.upscale_model = UpscaleModel(self.device, worker_id)
         self.prompt_enh_model = MagicPrompt(self.device)
-        self.translator = Translator(self.device)
+
         self.aesthetic_model = AestheticSafetyModel(self.device)
         
     def forward(self, preprocess_data: dict):
         match preprocess_data["type"]:
             case "text2image"  | "image2image":
-                # 翻译中文
                 image_generation_data = preprocess_data["pipeline_params"]
 
-                image_generation_data['prompt'], image_generation_data['negative_prompt'] = \
-                    self.translator.prompt_handle(
-                        image_generation_data['prompt'], 
-                        image_generation_data['negative_prompt'] 
-                    )
-                
                 # 文生图
                 if preprocess_data["type"]=="text2image":
                     print("t2i task")
@@ -215,8 +215,8 @@ class Postprocess(Worker):
 
 
 if __name__ == "__main__":
-    import os 
-    os.environ['TRANSFORMERS_CACHE'] = "/root/mosec-server/models-cache"
+    INFERENCE_BATCH_SIZE = 1
+
     from gpuinfo import GPUInfo
     num_gpus = len(GPUInfo.gpu_usage()[0])
     print("num gpus ",num_gpus)
