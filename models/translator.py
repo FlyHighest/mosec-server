@@ -1,4 +1,4 @@
-from lingua import LanguageDetectorBuilder,Language
+from lingua import Language
 from transformers import pipeline
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import math ,torch
@@ -43,7 +43,6 @@ class Translator:
     # other languages to english 
     def __init__(self,device) -> None:
         self.device = device
-        self.detect_language = LanguageDetectorBuilder.from_all_languages().with_preloaded_language_models().build()
         self.translate_tokenizer = AutoTokenizer.from_pretrained(TRANSLATOR_MODEL_ID)
         self.translate_model = AutoModelForSeq2SeqLM.from_pretrained(TRANSLATOR_MODEL_ID)
         self.translate_pipeline = pipeline(
