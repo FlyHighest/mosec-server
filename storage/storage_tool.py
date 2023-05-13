@@ -63,7 +63,7 @@ class StorageTool:
     @staticmethod
     def tencent_copy(image_url_temp,userid):
         domain, source_key = get_domain_key_from_tencent_url(image_url_temp)
-        key = f'{userid}/{nanoid.generate(StorageTool.alphabet,8)}.webp'
+        key = f'{userid}/{nanoid.generate(alphabet,8)}.webp'
         client.copy(
             Bucket='yunjing-images-1256692038',
             Key=key,
