@@ -2,7 +2,6 @@ import torch.nn as nn
 import torch 
 import clip 
 import os , json
-import onnxruntime
 import numpy as np 
 import datetime
 import base64
@@ -28,9 +27,6 @@ def get_aesthetic_model(clip_model="vit_l_14"):
     m.eval()
     return m
 
-def load_safety_model():
-    m = onnxruntime.InferenceSession("models-cache/clip_bin_nsfw.onnx",providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
-    return m
     
 endpoint_host = 'isafe.ilivedata.com'
 endpoint_path = '/api/v1/image/check'
@@ -95,19 +91,7 @@ class AestheticSafetyModel:
         self.aesthetic_model = get_aesthetic_model()
         self.aesthetic_model.to(device)
         
-        self.safety_model = load_safety_model()
-        
-        
-    def get_aes_and_nsfw(self,img):
-        img = self.clip_preprocess(img).unsqueeze(0).to(self.device)
-        with torch.no_grad():
-            img_features = self.clip_model.encode_image(img)
-            img_features /= img_features.norm(dim=-1,keepdim=True)
-            score = self.aesthetic_model(img_features.type(torch.cuda.FloatTensor))
-            score = score.item()
-        output = self.safety_model.run(None, {'input_1': img_features.cpu().numpy().astype(np.float64)})
-        nsfw = output[0][0][0]
-        return score , nsfw
+
     
     def get_aes_nsfw_and_face(self,image,userid="Default"):
         img = self.clip_preprocess(image).unsqueeze(0).to(self.device)
