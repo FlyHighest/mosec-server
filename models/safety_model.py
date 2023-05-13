@@ -1,8 +1,4 @@
-import torch.nn as nn 
-import torch 
-import clip 
-import os , json
-import numpy as np 
+import json
 import datetime
 import base64
 import hmac
@@ -12,20 +8,6 @@ from urllib.request import Request, urlopen
 from PIL import Image 
 from io import BytesIO
 from params.secret import ilivedata_pid,ilivedata_secret
-def get_aesthetic_model(clip_model="vit_l_14"):
-    """load the aethetic model"""
-    cache_folder = "models-cache"
-    path_to_model = cache_folder + "/sa_0_4_"+clip_model+"_linear.pth"
-    if clip_model == "vit_l_14":
-        m = nn.Linear(768, 1)
-    elif clip_model == "vit_b_32":
-        m = nn.Linear(512, 1)
-    else:
-        raise ValueError()
-    s = torch.load(path_to_model)
-    m.load_state_dict(s)
-    m.eval()
-    return m
 
     
 endpoint_host = 'isafe.ilivedata.com'
@@ -83,42 +65,19 @@ def send(querystring, signature, time_stamp):
     return urlopen(req).read().decode()
 
 
-class AestheticSafetyModel:
-    def __init__(self,device) -> None:
-        self.device = device 
-        self.clip_model,self.clip_preprocess = clip.load("ViT-L/14",device=device,download_root="models-cache")
+class SafetyModel:
+    def __init__(self) -> None:
+        pass 
 
-        self.aesthetic_model = get_aesthetic_model()
-        self.aesthetic_model.to(device)
-        
-
-    
-    def get_aes_nsfw_and_face(self,image,userid="Default"):
-        img = self.clip_preprocess(image).unsqueeze(0).to(self.device)
-        with torch.no_grad():
-            img_features = self.clip_model.encode_image(img)
-            img_features /= img_features.norm(dim=-1,keepdim=True)
-            score = self.aesthetic_model(img_features.type(torch.cuda.FloatTensor))
-            score = score.item()
+    def get_nsfw_and_face(self,image,userid="Default"):
         image_base64 = img2base64(image) 
         response = check(image_base64, 2, userid)
         res = json.loads(response)
         nsfw_res = int(res['result'])
         
         face = True if int(res['extraInfo']['numFace'])>0 else False
-        return score, nsfw_res, face
+        return nsfw_res, face
 
-if __name__=="__main__":
-    from PIL import Image 
-    import glob
-    import time 
-    aesthetic_model = AestheticSafetyModel(torch.device("cuda:0"))
-    start = time.time()
-    for img_path in glob.glob("testimage/*g"):
-        img = Image.open(img_path)
-        print(img_path)
-        print(aesthetic_model.get_aes_and_nsfw(img))
-    end = time.time()
-    print(end-start)
+
 
 

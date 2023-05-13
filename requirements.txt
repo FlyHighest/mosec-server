@@ -3,7 +3,4 @@ torch
 diffusers
 mosec
 transformers
-clip
-autokeras
-facenet_pytorch
 cos-python-sdk-v5

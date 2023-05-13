@@ -9,7 +9,7 @@ import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
-from models import ImageGenerationModel,UpscaleModel,PromptEnhancer,Translator,AestheticSafetyModel
+from models import ImageGenerationModel,UpscaleModel,PromptEnhancer,Translator,SafetyModel,ScoreModel
 from storage.storage_tool import StorageTool
 from params.constants import EXTRA_MODEL_LORA
 
@@ -29,6 +29,7 @@ class Preprocess(Worker):
     def __init__(self) -> None:
         super().__init__()
         self.translator = Translator()
+        self.prompt_enh_model = PromptEnhancer()
 
     def prompt_format(self, prompt_str):
         prompt_str = re.sub(r"[\u3000-\u303F\uFF00-\uFFEF]",",",prompt_str)
@@ -72,18 +73,17 @@ class Preprocess(Worker):
                         "type": "upscale",
                         "img": img
                     }
+
                 case "enhanceprompt":
-                    ret = {
-                        "type": "enhanceprompt",
-                        "starting_text": data["starting_text"]
-                    }
+                    starting_text =  data["starting_text"]
+                    model_type = data["model_type"]
+                    result_text = self.prompt_enh_model(starting_text,model_type)
+                    raise ValidationError(result_text) # suggested by mosec maintainer: https://github.com/mosecorg/mosec/discussions/349
+                    
 
 
         except KeyError as err:
             raise ValidationError(f"cannot find key {err}") from err
-        except Exception as err:
-            raise ValidationError(
-                f"error: {err}") from err
 
         return ret
 
@@ -102,9 +102,6 @@ class Inference(Worker):
         # prepare models
         self.image_gen_model = ImageGenerationModel(worker_id)
         # self.upscale_model = UpscaleModel(self.device, worker_id)
-        self.prompt_enh_model = MagicPrompt(self.device)
-
-        self.aesthetic_model = AestheticSafetyModel(self.device)
         
     def forward(self, preprocess_data: dict):
         match preprocess_data["type"]:
@@ -127,16 +124,17 @@ class Inference(Worker):
                 else:
                     userid = "Default"
                     
-                score, nsfw_res, has_face = self.aesthetic_model.get_aes_nsfw_and_face(generated_image,userid)
+                # score, nsfw_res, has_face = self.aesthetic_model.get_aes_nsfw_and_face(generated_image,userid)
 
 
                 ret = {
                     "type": "text2image",
                     "img_path" : generated_img_path,
                     "gen_id": image_generation_data['gen_id'],
-                    "nsfw": nsfw_res,
-                    "score": score,
-                    "face":has_face,
+                    "prompt": image_generation_data['prompt'],
+                    # "nsfw": nsfw_res,
+                    # "score": score,
+                    # "face":has_face,
                     "userid": userid
                 }
 
@@ -165,6 +163,9 @@ class Postprocess(Worker):
     def __init__(self):
         super().__init__()
         self.storage_tool = StorageTool()
+        self.safety_model = SafetyModel()
+        self.score_model = ScoreModel(device="cpu")
+
 
     def forward(self, inference_data):
         match inference_data["type"]:
@@ -177,23 +178,26 @@ class Postprocess(Worker):
                     }
                 
                 else: 
-                    if inference_data['nsfw']==2:
-                        img_url = ""
+                    score = self.score_model.get_score(img_path,inference_data["prompt"])
+                    nsfw_ilive_score, face = self.safety_model.get_nsfw_and_face(img_path,userid=inference_data["userid"])
+                    if nsfw_ilive_score==2:
+                        img_url = self.storage_tool.tencent_copy(img_url,"tmp")
                         nsfw = True
-                    elif inference_data['nsfw']==1:
-                        img_url = self.storage_tool.upload(img_path,"tmp_check")
+                    elif nsfw_ilive_score==1:
+                        img_url = self.storage_tool.upload(img_path,"tmp")
                         nsfw = self.storage_tool.tencent_check_nsfw(img_url)
                         if not nsfw:
                             img_url = self.storage_tool.tencent_copy(img_url,userid)
+                    
                     else:
                         nsfw = False
                         img_url = self.storage_tool.upload(img_path,userid)
                         
                     ret = {
                         "img_url": img_url,
-                        "score":inference_data['score'],
+                        "score":score,
                         "nsfw":nsfw,
-                        "face":inference_data['face']
+                        "face":face,
                     }
                     return ret 
             case "upscale":
