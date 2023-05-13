@@ -9,7 +9,7 @@ import torch  # type: ignore
 import httpx
 from mosec import Server, Worker
 from mosec.errors import ValidationError
-from models import ImageGenerationModel,UpscaleModel,MagicPrompt,Translator,AestheticSafetyModel
+from models import ImageGenerationModel,UpscaleModel,PromptEnhancer,Translator,AestheticSafetyModel
 from storage.storage_tool import StorageTool
 from params.constants import EXTRA_MODEL_LORA
 
