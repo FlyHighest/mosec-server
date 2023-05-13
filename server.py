@@ -181,7 +181,7 @@ class Postprocess(Worker):
                     score = self.score_model.get_score(img_path,inference_data["prompt"])
                     nsfw_ilive_score, face = self.safety_model.get_nsfw_and_face(img_path,userid=inference_data["userid"])
                     if nsfw_ilive_score==2:
-                        img_url = self.storage_tool.tencent_copy(img_url,"tmp")
+                        img_url = self.storage_tool.upload(img_path,"tmp")
                         nsfw = True
                     elif nsfw_ilive_score==1:
                         img_url = self.storage_tool.upload(img_path,"tmp")
