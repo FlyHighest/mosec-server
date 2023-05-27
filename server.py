@@ -175,20 +175,20 @@ class Postprocess(Worker):
                 if img_path == "Error":
                     return {
                         "img_url": "Error",
+                        "score": None,
+                        "nsfw": None,
+                        "face":None
                     }
                 
                 else: 
                     score = self.score_model.get_score(img_path,inference_data["prompt"])
                     nsfw_ilive_score, face = self.safety_model.get_nsfw_and_face(img_path,userid=inference_data["userid"])
                     if nsfw_ilive_score==2:
-                        img_url = self.storage_tool.upload(img_path,"tmp")
+                        img_url = self.storage_tool.upload(img_path,userid)
                         nsfw = True
                     elif nsfw_ilive_score==1:
-                        img_url = self.storage_tool.upload(img_path,"tmp")
+                        img_url = self.storage_tool.upload(img_path,userid)
                         nsfw = self.storage_tool.tencent_check_nsfw(img_url)
-                        if not nsfw:
-                            img_url = self.storage_tool.tencent_copy(img_url,userid)
-                    
                     else:
                         nsfw = False
                         img_url = self.storage_tool.upload(img_path,userid)

@@ -128,7 +128,7 @@ class ImageGenerationModel:
                 "cfg_scale" : params["guidance_scale"],
                 "width" : params["width"],
                 "height" : params["height"],
-                "restore_faces" : True,
+                "restore_faces" : False,
                 "negative_prompt" : params["negative_prompt"],
                 "images":[params["image"]],
                 "denoising_strength": 1 - float(params["i2i_guidance_strength"]),
@@ -163,7 +163,7 @@ class ImageGenerationModel:
                 "cfg_scale" : params["guidance_scale"],
                 "width" : params["width"],
                 "height" : params["height"],
-                "restore_faces" : True,
+                "restore_faces" : False,
                 "negative_prompt" : params["negative_prompt"]   
             }
             model_name = params["model_name"]
