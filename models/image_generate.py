@@ -13,30 +13,42 @@ class ImageGenerationModel:
         self.worker_id = worker_id
         #self.model_url = MODEL_URL[worker_id]
         self.api = webuiapi.WebUIApi(port=MODEL_PORT[worker_id])
+        # print("start api connection on port",MODEL_PORT[worker_id])
         self.output_name = f"/tmp/yunjing_id{self.worker_id}.jpeg"
         self.output_name_webp = f"/tmp/yunjing_id{self.worker_id}.webp"
         self.cn = webuiapi.ControlNetInterface(self.api)
         print(f"build txt2img api in worker {worker_id}, port={MODEL_PORT[worker_id]}")
-
+        extra_options_vae_ft_mse = [
+            'A-ZovyaRPGArtistTools-v3',
+            "ACertainThing",
+            "YunJingAnime-v1",
+            "Counterfeit-v2.5",
+        ]
+        extra_options_clip_skip2 = [
+            "ACertainThing",
+            'MeinaMix-v10',
+            'MeinaMix-v8',
+            'DreamShaper-v4',
+            'DreamShaper-v6',
+            "YunJingAnime-v1",
+            "Counterfeit-v2.5",
+            "Counterfeit-v3",
+        ]
         self.extra_options = defaultdict(dict)
-        self.extra_options["ACertainThing"]= {
-                     "override_settings":{"CLIP_stop_at_last_layers":2,
-                                          'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors'}
-                }
-        self.extra_options["MeinaMix"]= {
+        for model_name in extra_options_vae_ft_mse:
+            self.extra_options[model_name] = {
+                 "override_settings":{
+                     'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors'
+                 }
+            }
+        for model_name in extra_options_clip_skip2:
+            if model_name in self.extra_options:
+                self.extra_options[model_name]["override_settings"]['CLIP_stop_at_last_layers'] =2 
+            else:
+                self.extra_options[model_name]= {
                      "override_settings":{"CLIP_stop_at_last_layers":2}
                 }
-        self.extra_options["DreamShaper"] = {
-                     "override_settings":{"CLIP_stop_at_last_layers":2}
-                }
-        self.extra_options["YunJingAnime-v1"]= {
-                     "override_settings":{'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors',
-                                         "CLIP_stop_at_last_layers":2}
-                }
-        self.extra_options["Counterfeit-V2.5"]={ 
-            "override_settings":{'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors',
-                                "CLIP_stop_at_last_layers":2}
-                }
+        
         
         self.i2i_preprocess_map = {
             "原图":"none",
@@ -102,7 +114,7 @@ class ImageGenerationModel:
 
             self.api.util_set_model(model_name)
 
-            print(json_data)
+            # print(json_data)
             result = self.cn.txt2img(**json_data)
             
             image = result.image
@@ -182,7 +194,8 @@ class ImageGenerationModel:
                 
                 
             json_data.update(self.extra_options[model_name])
-
+            print(model_name,self.extra_options[model_name])
+            
             self.api.util_set_model(model_name)
 
             result = self.api.txt2img(**json_data)
