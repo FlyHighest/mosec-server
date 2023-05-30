@@ -22,7 +22,11 @@ class ImageGenerationModel:
             'A-ZovyaRPGArtistTools-v3',
             "ACertainThing",
             "YunJingAnime-v1",
+            
+        ]
+        extra_options_vae_cf = [
             "Counterfeit-v2.5",
+            "Counterfeit-v3",
         ]
         extra_options_clip_skip2 = [
             "ACertainThing",
@@ -39,6 +43,12 @@ class ImageGenerationModel:
             self.extra_options[model_name] = {
                  "override_settings":{
                      'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors'
+                 }
+            }
+        for model_name in extra_options_vae_cf:
+            self.extra_options[model_name] = {
+                 "override_settings":{
+                     'sd_vae': 'Counterfeit-V2.5.vae.pt'
                  }
             }
         for model_name in extra_options_clip_skip2:
