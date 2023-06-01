@@ -24,7 +24,7 @@ class ImageGenerationModel:
             "YunJingAnime-v1",
             
         ]
-        extra_options_vae_cf = [
+        extra_options_vae_kl = [
             "Counterfeit-v2.5",
             "Counterfeit-v3",
         ]
@@ -45,10 +45,10 @@ class ImageGenerationModel:
                      'sd_vae': 'vae-ft-mse-840000-ema-pruned.safetensors'
                  }
             }
-        for model_name in extra_options_vae_cf:
+        for model_name in extra_options_vae_kl:
             self.extra_options[model_name] = {
                  "override_settings":{
-                     'sd_vae': 'Counterfeit-V2.5.vae.pt'
+                     'sd_vae': 'klF8Anime2VAE.ckpt'
                  }
             }
         for model_name in extra_options_clip_skip2:
