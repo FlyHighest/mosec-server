@@ -35,8 +35,7 @@ class StorageTool:
         
     def upload_tencent(self,img_path,userid):
         response = None
-        if os.path.exists(img_path.replace(".jpeg",".webp")):
-            img_path = img_path.replace(".jpeg",".webp")
+        
             
         key = f'{userid}/{nanoid.generate(alphabet,8)}.webp'
         for i in range(0, 3): # 尝试三次最多

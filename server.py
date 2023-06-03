@@ -53,8 +53,6 @@ class Preprocess(Worker):
                             data['negative_prompt'] 
                         )
                     
-                    if data['model_name']=="OpenJourney" and not data['prompt'].startswith("mdjrny-v4 style"):
-                        data['prompt'] = "mdjrny-v4 style, " + data['prompt']
 
                     if 'i2i_url' in data:
                         img_bytes = httpx.get(data['i2i_url']).content
@@ -71,7 +69,9 @@ class Preprocess(Worker):
                     img = Image.open(BytesIO(img_bytes)).convert("RGB")
                     ret = {
                         "type": "upscale",
-                        "img": img
+                        "img": img,
+                        "up_type":data["up_type"],
+                        "up_factor":data['up_factor']
                     }
 
                 case "enhanceprompt":
@@ -101,7 +101,7 @@ class Inference(Worker):
 
         # prepare models
         self.image_gen_model = ImageGenerationModel(worker_id)
-        # self.upscale_model = UpscaleModel(self.device, worker_id)
+        self.upscale_model = UpscaleModel( worker_id)
         
     def forward(self, preprocess_data: dict):
         match preprocess_data["type"]:
@@ -140,19 +140,15 @@ class Inference(Worker):
 
                 
             case "upscale":
-                del preprocess_data["type"]
+                img = preprocess_data['img']
+                up_type = preprocess_data["up_type"]
+                up_factor = preprocess_data["up_factor"]
+                path, upscaled_img = self.upscale_model(img,up_type,up_factor)
                 ret = {
                     "type":"upscale", 
-                    "img_path" : None # self.upscale_model(**preprocess_data)
+                    "img_path" : path
                 }
-            case "enhanceprompt":
-                starting_text = preprocess_data["starting_text"]
-                starting_text = self.translator.translate_chinese(starting_text)
-                enhanced = self.prompt_enh_model(starting_text=starting_text)
-                ret = {
-                    "type": "enhanceprompt",
-                    "enhanced_text": enhanced
-                }
+           
 
         return ret
 
@@ -192,7 +188,7 @@ class Postprocess(Worker):
                     else:
                         nsfw = False
                         img_url = self.storage_tool.upload(img_path,userid)
-                        
+                    os.remove(img_path)
                     ret = {
                         "img_url": img_url,
                         "score":score,
@@ -201,21 +197,19 @@ class Postprocess(Worker):
                     }
                     return ret 
             case "upscale":
-                img_path = "Error" #inference_data["img_path"]
+                img_path = inference_data["img_path"]
                 
                 if img_path == "Error":
                     return {
                         "img_url": "Error",
                     }
                 else: 
-                    img_url = self.storage_tool.upload(img_path,userid="tmp")
+                    img_url = self.storage_tool.upload(img_path,userid="upscale")
+                    os.remove(img_path)
                     return {
                         "img_url": img_url
                     }
-            case "enhanceprompt":
-                return {
-                    "enhanced_text": inference_data["enhanced_text"]
-                }
+            
 
 
 if __name__ == "__main__":

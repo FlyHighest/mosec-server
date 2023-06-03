@@ -6,6 +6,7 @@ import base64
 import io
 import webuiapi
 from collections import defaultdict
+import nanoid ,string
 
 class ImageGenerationModel:
    
@@ -14,8 +15,7 @@ class ImageGenerationModel:
         #self.model_url = MODEL_URL[worker_id]
         self.api = webuiapi.WebUIApi(port=MODEL_PORT[worker_id])
         # print("start api connection on port",MODEL_PORT[worker_id])
-        self.output_name = f"/tmp/yunjing_id{self.worker_id}.jpeg"
-        self.output_name_webp = f"/tmp/yunjing_id{self.worker_id}.webp"
+        self.output_name_webp = "/tmp/yunjing_id"+str(worker_id)+"_{}.webp"
         self.cn = webuiapi.ControlNetInterface(self.api)
         print(f"build txt2img api in worker {worker_id}, port={MODEL_PORT[worker_id]}")
         extra_options_vae_ft_mse = [
@@ -128,10 +128,10 @@ class ImageGenerationModel:
             result = self.cn.txt2img(**json_data)
             
             image = result.image
-            image.save(self.output_name, format='jpeg', quality=90)
-            image.save(self.output_name_webp,format="webp",quality=90)
+            output_name = self.output_name_webp.format(nanoid.generate(string.ascii_lowercase,6))
+            image.save(output_name,format="webp",quality=90)
 
-            return self.output_name, image
+            return output_name, image
 
         except:
             traceback.print_exc()
@@ -165,9 +165,10 @@ class ImageGenerationModel:
             result = self.api.img2img(**json_data)
             # print(json_data)
             image = result.image
-            image.save(self.output_name, format='jpeg', quality=90)
-            image.save(self.output_name_webp,format="webp",quality=90)
-            return self.output_name, image
+            output_name = self.output_name_webp.format(nanoid.generate(string.ascii_lowercase,6))
+            image.save(output_name,format="webp",quality=90)
+
+            return output_name, image
 
         except:
             traceback.print_exc()
@@ -211,10 +212,10 @@ class ImageGenerationModel:
             result = self.api.txt2img(**json_data)
             # print(json_data)
             image = result.image
-            image.save(self.output_name, format='jpeg', quality=90)
-            image.save(self.output_name_webp,format="webp",quality=90)
-            return self.output_name, image
+            output_name = self.output_name_webp.format(nanoid.generate(string.ascii_lowercase,6))
+            image.save(output_name,format="webp",quality=90)
 
+            return output_name, image
         except:
             traceback.print_exc()
             print("Error while generating with model "+model_name)
