@@ -25,6 +25,7 @@ class ImageGenerationModel:
              'GuoFeng-v2',
              'GuoFeng-v3.3',
              'GuoFengRealMix',
+            "BreakDomainRealistic"
         ]
         extra_options_vae_kl = [
             "Counterfeit-v2.5",
