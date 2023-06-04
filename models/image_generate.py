@@ -22,11 +22,14 @@ class ImageGenerationModel:
             'A-ZovyaRPGArtistTools-v3',
             "ACertainThing",
             "YunJingAnime-v1",
-            
+             'GuoFeng-v2',
+             'GuoFeng-v3.3',
+             'GuoFengRealMix',
         ]
         extra_options_vae_kl = [
             "Counterfeit-v2.5",
             "Counterfeit-v3",
+            "GhostMix-v2"
         ]
         extra_options_clip_skip2 = [
             "ACertainThing",
@@ -37,6 +40,7 @@ class ImageGenerationModel:
             "YunJingAnime-v1",
             "Counterfeit-v2.5",
             "Counterfeit-v3",
+            'NeverEndingDream-v1.22'
         ]
         self.extra_options = defaultdict(dict)
         for model_name in extra_options_vae_ft_mse:
