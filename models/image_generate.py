@@ -7,6 +7,20 @@ import io
 import webuiapi
 from collections import defaultdict
 
+# 写一个装饰器，被装饰的函数如果抛出了错误，就再试一次，最多可以重试3次
+def retry(func):
+    def wrapper(*args, **kwargs):
+        for i in range(3):
+            try:
+                ret = func(*args, **kwargs)
+                break 
+            except Exception as e:
+                print(f"retry {i} times")
+                print(e)
+                continue
+        return ret 
+    return wrapper
+
 class ImageGenerationModel:
    
     def __init__(self, worker_id) -> None:
@@ -65,6 +79,7 @@ class ImageGenerationModel:
     def __call__(self, model_name,  pipeline_params: dict):
         pass 
 
+    @retry
     def image2image_controlnet(self, params):
         # 实际上调用的是txt2img接口，把引导图看成是图到图
         try:
@@ -117,7 +132,7 @@ class ImageGenerationModel:
             return "Error",None
 
 
-
+    @retry
     def image2image(self, params):
         try:
             json_data = {
@@ -152,7 +167,7 @@ class ImageGenerationModel:
             print("Error while generating with model "+model_name)
             return "Error",None
 
-
+    @retry
     def text2image(self,params):
         try:
             json_data = {
