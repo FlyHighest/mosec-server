@@ -10,15 +10,9 @@
 # }
 MODEL_URL = {
   0:"http://localhost:8000/sdapi/v1/txt2img",
-  1:"http://localhost:8001/sdapi/v1/txt2img",
-  2:"http://localhost:8002/sdapi/v1/txt2img",
-  3:"http://localhost:8003/sdapi/v1/txt2img"
 }
 MODEL_PORT={
     0:8000,
-    1:8001,
-    2:8002,
-    3:8003
 }
 EXTRA_MODEL_LORA = {
   "LORA-KoreanDollLikeness":",<lora:koreandollv10:0.66>",
