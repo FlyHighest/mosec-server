@@ -21,6 +21,7 @@ def retry_on_error(func):
                 return result
             except:
                 time.sleep(0.1)  
+
     return wrapper
 
 class ImageGenerationModel:
