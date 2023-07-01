@@ -8,6 +8,21 @@ import webuiapi
 from collections import defaultdict
 import nanoid ,string
 
+
+def retry_on_error(func):
+    def wrapper(*args, **kwargs):
+        i = 0
+        while i<5:
+            i += 1
+            try:
+                result = func(*args, **kwargs)
+                if result[0] == "Error":
+                    raise Exception("Function failed")
+                return result
+            except:
+                time.sleep(0.1)  
+    return wrapper
+
 class ImageGenerationModel:
    
     def __init__(self, worker_id) -> None:
@@ -30,7 +45,8 @@ class ImageGenerationModel:
         extra_options_vae_kl = [
             "Counterfeit-v2.5",
             "Counterfeit-v3",
-            "GhostMix-v2"
+            "GhostMix-v2",
+            "ReVAnimated-v1.2.2"
         ]
         extra_options_clip_skip2 = [
             "ACertainThing",
@@ -91,7 +107,8 @@ class ImageGenerationModel:
 
     def __call__(self, model_name,  pipeline_params: dict):
         pass 
-
+    
+    @retry_on_error
     def image2image_controlnet(self, params):
         # 实际上调用的是txt2img接口，把引导图看成是图到图
         try:
@@ -139,12 +156,10 @@ class ImageGenerationModel:
             return output_name, image
 
         except:
-            traceback.print_exc()
-            print("Error while generating with model "+model_name)
             return "Error",None
 
 
-
+    @retry_on_error
     def image2image(self, params):
         try:
             json_data = {
@@ -176,11 +191,9 @@ class ImageGenerationModel:
             return output_name, image
 
         except:
-            traceback.print_exc()
-            print("Error while generating with model "+model_name)
             return "Error",None
 
-
+    @retry_on_error
     def text2image(self,params):
         try:
             json_data = {
@@ -222,7 +235,4 @@ class ImageGenerationModel:
 
             return output_name, image
         except:
-            traceback.print_exc()
-            print("Error while generating with model "+model_name)
-            print(json_data)
             return "Error",None
