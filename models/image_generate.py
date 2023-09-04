@@ -7,12 +7,12 @@ import io
 import webuiapi
 from collections import defaultdict
 import nanoid ,string
-
+import time
 
 def retry_on_error(func):
     def wrapper(*args, **kwargs):
         i = 0
-        while i<5:
+        while i<8:
             i += 1
             try:
                 result = func(*args, **kwargs)
@@ -20,8 +20,10 @@ def retry_on_error(func):
                     raise Exception("Function failed")
                 return result
             except:
+                print(f"retry on error {i}")
+                
                 time.sleep(0.1)  
-
+        return "Error",None
     return wrapper
 
 class ImageGenerationModel:
@@ -111,7 +113,6 @@ class ImageGenerationModel:
     
     @retry_on_error
     def image2image_controlnet(self, params):
-        # 实际上调用的是txt2img接口，把引导图看成是图到图
         try:
             json_data = {
                 "prompt" : params["prompt"],
@@ -123,12 +124,13 @@ class ImageGenerationModel:
                 "height" : params["height"],
                 "restore_faces" : False,
                 "negative_prompt" : params["negative_prompt"],
-
-                "controlnet_input_image":[params["image"]],
-                "controlnet_weight":params["i2i_guidance_strength"],
-                "controlnet_module": self.i2i_preprocess_map[params['i2i_preprocess']],
-                "controlnet_model": self.i2i_model_map[params['i2i_model']],
-                "guess_mode":False
+            }
+            control_unit_data = {
+                "input_image":params["image"],
+                "weight":float(params["i2i_guidance_strength"]),
+                "module": self.i2i_preprocess_map[params['i2i_preprocess']],
+                "model": self.i2i_model_map[params['i2i_model']],
+                "control_mode": 0
             }
             model_name = params["model_name"]
     
@@ -138,17 +140,18 @@ class ImageGenerationModel:
                 json_data.update({
                      "enable_hr": True,
                      "hr_scale":  2,
-                     "hr_upscale": webuiapi.HiResUpscaler.Latent,
-                     "denoising_strength":0.6
+                     "hr_upscaler": webuiapi.HiResUpscaler.Latent,
+                    "hr_second_pass_steps": 10,
+                     "denoising_strength":0.4
                 })
                 
                 
             json_data.update(self.extra_options[model_name])
 
             self.api.util_set_model(model_name)
+            unit1 = webuiapi.ControlNetUnit(**control_unit_data)
 
-            # print(json_data)
-            result = self.cn.txt2img(**json_data)
+            result = self.api.txt2img(controlnet_units=[unit1],**json_data)
             
             image = result.image
             output_name = self.output_name_webp.format(nanoid.generate(string.ascii_lowercase,6))
@@ -157,6 +160,7 @@ class ImageGenerationModel:
             return output_name, image
 
         except:
+            traceback.print_exc()
             return "Error",None
 
 
@@ -218,7 +222,7 @@ class ImageGenerationModel:
                      "hr_scale":  2,
                      "hr_upscaler": webuiapi.HiResUpscaler.Latent,
                      "hr_second_pass_steps": 10,
-                     "denoising_strength":0.6
+                     "denoising_strength":0.4
                 })
                 
                 
