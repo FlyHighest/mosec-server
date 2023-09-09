@@ -231,7 +231,7 @@ class ImageGenerationModel:
             print(model_name,self.extra_options[model_name])
             
             self.api.util_set_model(model_name)
-
+            self.api.has_controlnet=True
             result = self.api.txt2img(**json_data)
             # print(json_data)
             image = result.image
