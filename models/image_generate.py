@@ -89,23 +89,30 @@ class ImageGenerationModel:
             "边缘提取(Canny)":"canny",
             "边缘提取(HED)":"hed",
             "线段提取":"mlsd",
-            "草图提取":"fake_scribble",
-            "人体姿态估计":"openpose",
+            "草图提取":"scribble_hed",
+            "人体姿态估计":"openpose_full",
             "语义分割":"segmentation",
             "深度估计":"depth",
-            "法线贴图估计":"normal_map"
+            "法线贴图估计":"normal_map",
+            "线稿提取":"lineart",
+            "线稿提取(动漫)":"lineart_anime",
         }
         self.i2i_model_map = {
             "原模型":"None",
-            "ControlNet-Canny": 'control_sd15_canny [e3fe7712]',
-            "ControlNet-深度图":'control_sd15_depth [400750f6]',
-            "ControlNet-HED":'control_sd15_hed [13fee50b]',
-            "ControlNet-线段":'control_sd15_mlsd [e3705cfa]',
-            "ControlNet-法线贴图":'control_sd15_normal [63f96f7c]',
-            "ControlNet-人体姿态":'control_sd15_openpose [9ca67cc5]',
-            "ControlNet-草图":'control_sd15_scribble [c508311e]',
-            "ControlNet-语义分割":'control_sd15_seg [b9c1cc12]'
+            "ControlNet-Canny": 'control_v11p_sd15_canny [d14c016b]',
+            "ControlNet-深度图":'control_v11f1p_sd15_depth [cfd03158]',
+            "ControlNet-软边缘":'control_v11p_sd15_softedge [a8575a2a]',
+            "ControlNet-线段":'control_v11p_sd15_mlsd [aca30ff0]',
+            "ControlNet-法线贴图":'control_v11p_sd15_normalbae [316696f1]',
+            "ControlNet-人体姿态":'control_v11p_sd15_openpose [cab727d4]',
+            "ControlNet-草图":'control_v11p_sd15_scribble [d4ba51ff]',
+            "ControlNet-语义分割":'control_v11p_sd15_seg [e1f51eb9]',
+            "ControlNet-Tile": 'control_v11f1e_sd15_tile [a371b31b]',
+            "ControlNet-线稿": 'control_v11p_sd15_lineart [43d4be0d]',
+            "ControlNet-线稿(动漫)": 'control_v11p_sd15s2_lineart_anime [3825e83e]',
         }
+#
+
 
 
     def __call__(self, model_name,  pipeline_params: dict):
@@ -142,7 +149,6 @@ class ImageGenerationModel:
                      "hr_scale":  2,
                      "hr_upscaler": webuiapi.HiResUpscaler.Latent,
                     "hr_second_pass_steps": 10,
-                     "denoising_strength":0.4
                 })
                 
                 
@@ -222,7 +228,6 @@ class ImageGenerationModel:
                      "hr_scale":  2,
                      "hr_upscaler": webuiapi.HiResUpscaler.Latent,
                      "hr_second_pass_steps": 10,
-                     "denoising_strength":0.4
                 })
                 
                 
