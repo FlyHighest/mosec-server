@@ -8,6 +8,7 @@ import webuiapi
 from collections import defaultdict
 import nanoid ,string
 import time
+import os.path as osp
 
 def retry_on_error(func):
     def wrapper(*args, **kwargs):
@@ -111,9 +112,27 @@ class ImageGenerationModel:
             "ControlNet-线稿": 'control_v11p_sd15_lineart [43d4be0d]',
             "ControlNet-线稿(动漫)": 'control_v11p_sd15s2_lineart_anime [3825e83e]',
         }
-#
+        self.model_names = self.api.util_get_model_names()
 
 
+
+    def find_model_by_name(self, name):
+        
+        import difflib
+
+        def str_simularity(a, b):
+            return difflib.SequenceMatcher(None, a, b).ratio()
+
+        max_sim = 0.0
+        max_model = self.model_names[0]
+        for model in self.model_names:
+            model_simplified = osp.splitext(model.split(" ")[0])[0]
+            sim = str_simularity(name, model_simplified)
+            if sim >= max_sim:
+                max_sim = sim
+                max_model = model
+        found_model = max_model
+        return found_model
 
     def __call__(self, model_name,  pipeline_params: dict):
         pass 
@@ -154,7 +173,7 @@ class ImageGenerationModel:
                 
             json_data.update(self.extra_options[model_name])
 
-            self.api.util_set_model(model_name)
+            self.api.util_set_model(self.find_model_by_name(model_name))
             unit1 = webuiapi.ControlNetUnit(**control_unit_data)
 
             result = self.api.txt2img(controlnet_units=[unit1],**json_data)
@@ -191,7 +210,7 @@ class ImageGenerationModel:
                 
             json_data.update(self.extra_options[model_name])
 
-            self.api.util_set_model(model_name)
+            self.api.util_set_model(self.find_model_by_name(model_name))
 
             result = self.api.img2img(**json_data)
             # print(json_data)
@@ -235,7 +254,7 @@ class ImageGenerationModel:
             json_data.update(self.extra_options[model_name])
             print(model_name,self.extra_options[model_name])
             
-            self.api.util_set_model(model_name)
+            self.api.util_set_model(self.find_model_by_name(model_name))
             self.api.has_controlnet=True
             result = self.api.txt2img(**json_data)
             # print(json_data)
