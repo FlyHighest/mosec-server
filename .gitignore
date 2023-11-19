@@ -2,6 +2,7 @@
 models-cache/
 models-cache
 secret.py
+.DS_Store
 log.txt
 testimage/
 .qiniu_pythonsdk_hostscache.json

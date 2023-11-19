@@ -1,0 +1,1 @@
+A mosec server that interacts with sd-webui-api for text-to-image generation.
